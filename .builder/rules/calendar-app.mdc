@@ -1,0 +1,97 @@
+---
+description: Calendar app architecture, state management, and component relationships
+globs: client/components/calendar/**,client/pages/Index.tsx,client/types/calendar.ts
+alwaysApply: false
+---
+
+# Calendar App Architecture
+
+A self-contained, client-only calendar built with React + Material Design 3 web components.
+
+## File Structure
+
+
+client/
+├── pages/
+│   └── Index.tsx                       # Root page — wraps CalendarLayout + CalendarApp
+├── components/
+│   └── calendar/
+│       ├── CalendarLayout.tsx          # Context provider + seed data + CRUD handlers
+│       ├── Sidebar.tsx                 # Left nav: Create button, MiniCalendar, nav items
+│       ├── MiniCalendar.tsx            # Compact monthly grid for sidebar date selection
+│       ├── MonthView.tsx               # Full monthly grid (7-col, event chips, overflow)
+│       ├── WeekView.tsx                # 7-col time grid with absolute-positioned events
+│       ├── DayView.tsx                 # Single-column time grid with absolute events
+│       ├── EventCard.tsx               # Small event chip used in MonthView cells
+│       └── EventDialog.tsx             # md-dialog for creating / editing events
+└── types/
+    └── calendar.ts                     # CalendarEvent, ViewMode, EventColor types
+```
+
+## State Management
+
+All shared state lives in `CalendarLayout.tsx` via React Context (`CalendarContext`):
+
+| State | Type | Description |
+|-------|------|-------------|
+| `selectedDate` | `Date` | Currently focused date (drives all views) |
+| `viewMode` | `ViewMode` | `'month' \| 'week' \| 'day'` |
+| `events` | `CalendarEvent[]` | All calendar events (in-memory, seeded) |
+
+Access state anywhere inside `<CalendarLayout>` with `useCalendar()`.
+
+## Types (`client/types/calendar.ts`)
+
+```ts
+type ViewMode = "month" | "week" | "day";
+type EventColor = "primary" | "secondary" | "tertiary";
+
+interface CalendarEvent {
+  id: string;
+  title: string;
+  date: string;       // "YYYY-MM-DD"
+  startTime: string;  // "HH:MM" (24h)
+  endTime: string;    // "HH:MM" (24h)
+  color: EventColor;
+  description?: string;
+}
+```
+
+## Event Colors
+
+Events cycle through 3 MD3 color roles:
+- `primary` → `--md-sys-color-primary-container` / `--md-sys-color-on-primary-container`
+- `secondary` → `--md-sys-color-secondary-container` / `--md-sys-color-on-secondary-container`
+- `tertiary` → `--md-sys-color-tertiary-container` / `--md-sys-color-on-tertiary-container`
+
+## Time Grid Layout (WeekView / DayView)
+
+- `HOUR_HEIGHT = 60px` (WeekView) / `64px` (DayView) per hour
+- Events positioned with `position: absolute; top: (startMin/60)*HOUR_HEIGHT`
+- Height = `((endMin - startMin) / 60) * HOUR_HEIGHT`
+- Current time indicator uses `--md-sys-color-error` (red line)
+
+## Key Interactions
+
+| Action | Component | Handler |
+|--------|-----------|---------|
+| Click day cell in MonthView | `MonthView` | Navigates to DayView for that date |
+| Click "+N more" | `MonthView` | Navigates to DayView |
+| Click empty time slot | `WeekView` / `DayView` | Opens create dialog pre-filled with date+time |
+| Click event chip | Any view | Opens edit dialog |
+| Click "Create" in sidebar | `Sidebar` | Opens blank create dialog |
+| Click mini-calendar date | `MiniCalendar` | Updates `selectedDate` |
+
+## MD3 Components Used
+
+- `md-dialog` — EventDialog modal
+- `md-filled-text-field` — event form inputs
+- `md-filled-button` / `md-text-button` — dialog actions
+- `md-icon-button` / `md-icon` — nav arrows, close, hamburger
+- `md-outlined-button` — "Today" button in top bar
+- `md-divider` — sidebar section separator
+
+## No Backend
+
+Events are stored in React state only. Page refresh resets to seed data.
+To persist events, add localStorage in CalendarLayout (useEffect + JSON.stringify).
