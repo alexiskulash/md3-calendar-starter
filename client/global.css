@@ -1,0 +1,163 @@
+/** @import must precede all other statements */
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * Material Design 3 Color Tokens
+   * Using MD3 color system with HSL format for Tailwind compatibility
+   */
+  :root {
+    /* Google Calendar blue primary */
+    --md-sys-color-primary: 217 87% 43%;
+    --md-sys-color-on-primary: 0 0% 100%;
+    --md-sys-color-primary-container: 214 93% 92%;
+    --md-sys-color-on-primary-container: 214 100% 11%;
+
+    /* Secondary — Google teal-blue */
+    --md-sys-color-secondary: 204 100% 30%;
+    --md-sys-color-on-secondary: 0 0% 100%;
+    --md-sys-color-secondary-container: 201 100% 90%;
+    --md-sys-color-on-secondary-container: 204 100% 10%;
+
+    /* Tertiary — warm yellow */
+    --md-sys-color-tertiary: 45 80% 24%;
+    --md-sys-color-on-tertiary: 0 0% 100%;
+    --md-sys-color-tertiary-container: 52 89% 75%;
+    --md-sys-color-on-tertiary-container: 45 100% 7%;
+
+    /* Error */
+    --md-sys-color-error: 0 85% 60%;
+    --md-sys-color-on-error: 0 0% 100%;
+    --md-sys-color-error-container: 0 85% 92%;
+    --md-sys-color-on-error-container: 0 85% 16%;
+
+    /* Surface — clean white, Google Calendar style */
+    --md-sys-color-surface: 0 0% 100%;
+    --md-sys-color-on-surface: 0 0% 12%;
+    --md-sys-color-surface-variant: 120 3% 88%;
+    --md-sys-color-on-surface-variant: 150 3% 27%;
+    --md-sys-color-surface-container-low: 210 33% 99%;
+    --md-sys-color-surface-container: 213 30% 94%;
+    --md-sys-color-surface-container-high: 213 25% 92%;
+
+    /* Background */
+    --md-sys-color-background: 0 0% 100%;
+    --md-sys-color-on-background: 0 0% 12%;
+
+    /* Outline */
+    --md-sys-color-outline: 156 3% 45%;
+    --md-sys-color-outline-variant: 156 3% 77%;
+
+    /* Shape tokens */
+    --md-sys-shape-corner-none: 0px;
+    --md-sys-shape-corner-extra-small: 4px;
+    --md-sys-shape-corner-small: 8px;
+    --md-sys-shape-corner-medium: 12px;
+    --md-sys-shape-corner-large: 16px;
+    --md-sys-shape-corner-extra-large: 28px;
+    --md-sys-shape-corner-full: 9999px;
+
+    /* Calendar category colors */
+    --cal-tomato:    #D50000;
+    --cal-flamingo:  #E67C73;
+    --cal-tangerine: #F4511E;
+    --cal-banana:    #F6BF26;
+    --cal-sage:      #33B679;
+    --cal-basil:     #0B8043;
+    --cal-peacock:   #039BE5;
+    --cal-blueberry: #3F51B5;
+    --cal-lavender:  #7986CB;
+    --cal-grape:     #8E24AA;
+    --cal-graphite:  #616161;
+  }
+
+  .dark {
+    /* Dark theme - Material Design 3 dark colors */
+    --md-sys-color-primary: 220 100% 75%;
+    --md-sys-color-on-primary: 220 100% 20%;
+    --md-sys-color-primary-container: 220 100% 30%;
+    --md-sys-color-on-primary-container: 220 100% 90%;
+
+    --md-sys-color-secondary: 220 30% 75%;
+    --md-sys-color-on-secondary: 220 30% 20%;
+    --md-sys-color-secondary-container: 220 30% 30%;
+    --md-sys-color-on-secondary-container: 220 30% 90%;
+
+    --md-sys-color-tertiary: 30 100% 70%;
+    --md-sys-color-on-tertiary: 30 100% 20%;
+    --md-sys-color-tertiary-container: 30 100% 30%;
+    --md-sys-color-on-tertiary-container: 30 100% 90%;
+
+    --md-sys-color-error: 0 85% 70%;
+    --md-sys-color-on-error: 0 85% 20%;
+    --md-sys-color-error-container: 0 85% 30%;
+    --md-sys-color-on-error-container: 0 85% 90%;
+
+    --md-sys-color-surface: 220 15% 10%;
+    --md-sys-color-on-surface: 220 5% 90%;
+    --md-sys-color-surface-variant: 220 10% 20%;
+    --md-sys-color-on-surface-variant: 220 5% 80%;
+
+    --md-sys-color-background: 220 15% 8%;
+    --md-sys-color-on-background: 220 5% 90%;
+
+    --md-sys-color-outline: 220 5% 60%;
+    --md-sys-color-outline-variant: 220 10% 30%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--md-sys-color-outline-variant));
+  }
+
+  body {
+    background: hsl(var(--md-sys-color-background));
+    color: hsl(var(--md-sys-color-on-background));
+    font-family:
+      "Roboto",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+  }
+
+  :where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  pre,
+  code {
+    overflow-x: auto;
+    white-space: pre;
+  }
+}
+
+/* Material Design 3 Web Components customization */
+md-filled-button {
+  --md-filled-button-container-color: hsl(var(--md-sys-color-primary));
+  --md-filled-button-label-text-color: hsl(var(--md-sys-color-on-primary));
+}
+
+md-outlined-button {
+  --md-outlined-button-outline-color: hsl(var(--md-sys-color-outline));
+  --md-outlined-button-label-text-color: hsl(var(--md-sys-color-primary));
+}
+
+md-elevated-card {
+  --md-elevated-card-container-color: hsl(var(--md-sys-color-surface));
+}
+
+md-filled-text-field {
+  --md-filled-text-field-container-color: hsl(
+    var(--md-sys-color-surface-variant)
+  );
+  --md-filled-text-field-label-text-color: hsl(
+    var(--md-sys-color-on-surface-variant)
+  );
+}
