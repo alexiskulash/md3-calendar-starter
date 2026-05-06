@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, isToday } from "date-fns";
 import { CalendarEvent } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
@@ -79,13 +79,31 @@ function layoutDayEvents(events: CalendarEvent[]): LayoutEvent[] {
 // ─── WeekView component ───────────────────────────────────────────────────────
 
 export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }: WeekViewProps) {
-  const { filteredEvents, getCalendar, use24h, weekStartsMonday } = useCalendar();
+  const { filteredEvents, getCalendar, use24h, weekStartsMonday, updateEvent } = useCalendar();
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const HOUR_HEIGHT = isMobile ? 44 : 48;
   const TIME_COL_WIDTH = isMobile ? 44 : 56;
   const DAY_CIRCLE = isMobile ? 32 : 40;
+
+  // ── Drag & drop state ──────────────────────────────────────────────────────
+  const [dragging, setDragging] = useState<{
+    event: CalendarEvent;
+    offsetMinutes: number; // minutes from event top where the grab happened
+  } | null>(null);
+
+  const [dropPreview, setDropPreview] = useState<{
+    dayStr: string;
+    startMin: number;
+    duration: number;
+  } | null>(null);
+
+  function fmtTime(totalMin: number): string {
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  }
 
   const weekOpts = useMemo(
     () => ({ weekStartsOn: (weekStartsMonday ? 1 : 0) as 0 | 1 }),
@@ -250,6 +268,40 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       position: "relative",
                       borderLeft: "1px solid hsl(var(--md-sys-color-outline-variant))",
                     }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      if (!dragging) return;
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const y = e.clientY - rect.top;
+                      const rawMin = (y / HOUR_HEIGHT) * 60;
+                      const snapped = Math.round((rawMin - dragging.offsetMinutes) / 15) * 15;
+                      const clamped = Math.max(0, Math.min(23 * 60, snapped));
+                      const duration =
+                        timeToMinutes(dragging.event.endTime) -
+                        timeToMinutes(dragging.event.startTime);
+                      setDropPreview({ dayStr, startMin: clamped, duration });
+                    }}
+                    onDragLeave={(e) => {
+                      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                        setDropPreview((prev) =>
+                          prev?.dayStr === dayStr ? null : prev
+                        );
+                      }
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (!dragging || !dropPreview || dropPreview.dayStr !== dayStr) return;
+                      const { startMin, duration } = dropPreview;
+                      const endMin = Math.min(startMin + duration, 24 * 60 - 1);
+                      updateEvent({
+                        ...dragging.event,
+                        date: dayStr,
+                        startTime: fmtTime(startMin),
+                        endTime: fmtTime(endMin),
+                      });
+                      setDragging(null);
+                      setDropPreview(null);
+                    }}
                   >
                     {/* Hour rows */}
                     {HOURS.map((h) => (
@@ -284,9 +336,35 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       const widthPct = (1 / ev.cols) * 100;
                       const isShort = height < 30;
 
+                      const isDraggingThis = dragging?.event.id === ev.id;
+
                       return (
                         <button
                           key={ev.id}
+                          draggable
+                          onDragStart={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const offsetPx = e.clientY - rect.top;
+                            const offsetMin = Math.max(
+                              0,
+                              Math.min(
+                                Math.round((offsetPx / HOUR_HEIGHT) * 60 / 15) * 15,
+                                timeToMinutes(ev.endTime) - timeToMinutes(ev.startTime) - 15
+                              )
+                            );
+                            setDragging({ event: ev, offsetMinutes: offsetMin });
+                            e.dataTransfer.effectAllowed = "move";
+                            // Hide the default drag ghost
+                            const ghost = document.createElement("div");
+                            ghost.style.cssText = "position:fixed;left:-9999px;top:-9999px;";
+                            document.body.appendChild(ghost);
+                            e.dataTransfer.setDragImage(ghost, 0, 0);
+                            requestAnimationFrame(() => ghost.remove());
+                          }}
+                          onDragEnd={() => {
+                            setDragging(null);
+                            setDropPreview(null);
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             const rect = e.currentTarget.getBoundingClientRect();
@@ -304,7 +382,7 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                             borderRadius: 6,
                             padding: isShort ? "2px 4px" : "4px 6px",
                             textAlign: "left",
-                            cursor: "pointer",
+                            cursor: isDraggingThis ? "grabbing" : "grab",
                             overflow: "hidden",
                             boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.15)",
                             display: "flex",
@@ -313,6 +391,8 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                             lineHeight: 1.2,
                             zIndex: 1,
                             fontFamily: "inherit",
+                            opacity: isDraggingThis ? 0.35 : 1,
+                            transition: isDraggingThis ? "none" : "opacity 0.15s",
                           }}
                         >
                           <div
@@ -343,6 +423,49 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                         </button>
                       );
                     })}
+
+                    {/* Drop preview ghost */}
+                    {dropPreview?.dayStr === dayStr && dragging && (() => {
+                      const previewColor = getCalendar(dragging.event.cal)?.color ?? "#0B57D0";
+                      const previewTop = (dropPreview.startMin / 60) * HOUR_HEIGHT;
+                      const previewHeight = Math.max(
+                        (dropPreview.duration / 60) * HOUR_HEIGHT - 2,
+                        18
+                      );
+                      const previewEndMin = dropPreview.startMin + dropPreview.duration;
+                      const previewIsShort = previewHeight < 30;
+                      return (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: previewTop + 1,
+                            height: previewHeight,
+                            left: 2,
+                            right: 4,
+                            backgroundColor: previewColor,
+                            opacity: 0.65,
+                            borderRadius: 6,
+                            border: "2px dashed rgba(255,255,255,0.8)",
+                            pointerEvents: "none",
+                            zIndex: 10,
+                            padding: previewIsShort ? "2px 4px" : "4px 6px",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 1,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {dragging.event.title}
+                          </div>
+                          {!previewIsShort && (
+                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.9)", whiteSpace: "nowrap" }}>
+                              {fmtTime(dropPreview.startMin)} – {fmtTime(Math.min(previewEndMin, 24 * 60 - 1))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* Now line */}
                     {isDayToday && (
