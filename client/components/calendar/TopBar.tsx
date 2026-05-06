@@ -70,9 +70,9 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         display: "flex",
         alignItems: "center",
         gap: isMobile ? 2 : 4,
-        padding: isMobile ? "0 4px 0 2px" : "0 8px 0 4px",
-        backgroundColor: "hsl(var(--md-sys-color-surface))",
-        borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
+        padding: isMobile ? "0 4px 0 2px" : "0 12px 0 4px",
+        backgroundColor: "hsl(var(--md-sys-color-surface-container-low))",
+        borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant) / 0.6)",
         position: "relative",
         zIndex: 10,
       }}
@@ -82,54 +82,57 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         <md-icon>menu</md-icon>
       </md-icon-button>
 
-      {/* Logo: calendar icon with date + "Calendar" wordmark */}
+      {/* Logo: colored calendar icon + "Calendar" wordmark */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 8,
+          gap: 10,
           padding: "0 4px",
           minWidth: 0,
           flexShrink: 0,
         }}
       >
+        {/* Calendar icon tile */}
         <div
           style={{
             position: "relative",
             width: 36,
             height: 36,
-            borderRadius: 8,
-            border: "2px solid hsl(var(--md-sys-color-outline-variant))",
+            borderRadius: 10,
+            backgroundColor: "hsl(var(--md-sys-color-primary-container))",
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 15,
-            fontWeight: 600,
-            color: "hsl(var(--md-sys-color-on-surface))",
+            fontSize: 16,
+            fontWeight: 700,
+            color: "hsl(var(--md-sys-color-on-primary-container))",
             flexShrink: 0,
+            boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+            overflow: "hidden",
           }}
         >
+          {/* Colored top stripe */}
           <span
             style={{
               position: "absolute",
-              top: -2,
+              top: 0,
               left: 0,
               right: 0,
-              height: 5,
+              height: 7,
               backgroundColor: "hsl(var(--md-sys-color-primary))",
-              borderTopLeftRadius: 6,
-              borderTopRightRadius: 6,
             }}
           />
           {selectedDate.getDate()}
         </div>
+
         {!isMobile && (
           <span
             style={{
               fontSize: 20,
-              fontWeight: 400,
+              fontWeight: 500,
               color: "hsl(var(--md-sys-color-on-surface))",
-              letterSpacing: 0,
+              letterSpacing: "-0.2px",
               whiteSpace: "nowrap",
             }}
           >
@@ -138,23 +141,38 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         )}
       </div>
 
+      {/* Divider */}
+      {!isMobile && (
+        <div style={{
+          width: 1,
+          height: 24,
+          backgroundColor: "hsl(var(--md-sys-color-outline-variant))",
+          marginLeft: 4,
+          flexShrink: 0,
+        }} />
+      )}
+
       {/* Today + Prev/Next */}
-      <div style={{ display: "flex", alignItems: "center", gap: 2, marginLeft: isMobile ? 2 : 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 2, marginLeft: isMobile ? 2 : 4 }}>
         {!isMobile && (
           <button
             onClick={goToday}
             style={{
-              height: 36,
-              padding: "0 16px",
-              borderRadius: 4,
-              border: "1px solid hsl(var(--md-sys-color-outline))",
-              backgroundColor: "transparent",
-              color: "hsl(var(--md-sys-color-on-surface))",
+              height: 34,
+              padding: "0 18px",
+              borderRadius: 20,
+              border: "none",
+              backgroundColor: "hsl(var(--md-sys-color-secondary-container))",
+              color: "hsl(var(--md-sys-color-on-secondary-container))",
               fontSize: 14,
-              fontWeight: 500,
+              fontWeight: 600,
               cursor: "pointer",
               fontFamily: "inherit",
+              letterSpacing: "0.1px",
+              transition: "opacity 0.15s",
             }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.85"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
           >
             Today
           </button>
@@ -170,11 +188,11 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
       {/* Date label */}
       <span
         style={{
-          fontSize: isMobile ? 14 : 22,
-          fontWeight: 400,
+          fontSize: isMobile ? 15 : 20,
+          fontWeight: 500,
           color: "hsl(var(--md-sys-color-on-surface))",
-          marginLeft: isMobile ? 2 : 8,
-          letterSpacing: 0,
+          marginLeft: isMobile ? 2 : 4,
+          letterSpacing: "-0.2px",
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
@@ -394,21 +412,27 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
             display: "flex",
             alignItems: "center",
             gap: 4,
-            height: 36,
-            padding: isMobile ? "0 8px 0 10px" : "0 10px 0 14px",
-            borderRadius: 4,
-            border: "1px solid hsl(var(--md-sys-color-outline))",
-            backgroundColor: "transparent",
+            height: 34,
+            padding: isMobile ? "0 10px 0 12px" : "0 12px 0 16px",
+            borderRadius: 20,
+            border: "none",
+            backgroundColor: "hsl(var(--md-sys-color-surface-container-high))",
             color: "hsl(var(--md-sys-color-on-surface))",
             fontSize: isMobile ? 13 : 14,
-            fontWeight: 500,
+            fontWeight: 600,
             cursor: "pointer",
             fontFamily: "inherit",
             whiteSpace: "nowrap",
+            letterSpacing: "0.1px",
+            transition: "opacity 0.15s",
           }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.8"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
         >
           {VIEWS.find((v) => v.id === viewMode)?.label ?? "Week"}
-          <span style={{ fontSize: 18, lineHeight: 1, color: "hsl(var(--md-sys-color-on-surface-variant))", marginRight: -2 }}>▾</span>
+          <md-icon style={{ fontSize: "18px", color: "hsl(var(--md-sys-color-on-surface-variant))" }}>
+            expand_more
+          </md-icon>
         </button>
 
         {/* Dropdown menu */}
@@ -469,8 +493,8 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
       {/* Avatar */}
       <div
         style={{
-          width: 32,
-          height: 32,
+          width: 34,
+          height: 34,
           borderRadius: "50%",
           backgroundColor: "hsl(var(--md-sys-color-primary))",
           color: "hsl(var(--md-sys-color-on-primary))",
@@ -478,10 +502,12 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
           alignItems: "center",
           justifyContent: "center",
           fontSize: 13,
-          fontWeight: 600,
-          marginLeft: isMobile ? 2 : 4,
+          fontWeight: 700,
+          marginLeft: isMobile ? 2 : 6,
           flexShrink: 0,
           cursor: "pointer",
+          boxShadow: "0 0 0 2px hsl(var(--md-sys-color-surface-container-low)), 0 0 0 3.5px hsl(var(--md-sys-color-primary) / 0.4)",
+          letterSpacing: "0.5px",
         }}
         title="Alex Chen"
       >
