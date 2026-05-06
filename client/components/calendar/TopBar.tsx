@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ViewMode } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
+import { useAuth } from "../auth/AuthContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
 
 const VIEWS: { id: ViewMode; label: string }[] = [
@@ -21,8 +22,22 @@ interface TopBarProps {
 export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const { selectedDate, viewMode, setViewMode, goNext, goPrev, goToday, search, setSearch,
     use24h, setUse24h, weekStartsMonday, setWeekStartsMonday } = useCalendar();
+  const { user, logout } = useAuth();
   const isMobile = useIsMobile();
   const [searchExpanded, setSearchExpanded] = useState(false);
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const avatarMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!avatarMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (avatarMenuRef.current && !avatarMenuRef.current.contains(e.target as Node)) {
+        setAvatarMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [avatarMenuOpen]);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
   const viewDropdownRef = useRef<HTMLDivElement>(null);
@@ -490,28 +505,135 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         )}
       </div>
 
-      {/* Avatar */}
+      {/* Avatar + account menu */}
       <div
-        style={{
-          width: 34,
-          height: 34,
-          borderRadius: "50%",
-          backgroundColor: "hsl(var(--md-sys-color-primary))",
-          color: "hsl(var(--md-sys-color-on-primary))",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 13,
-          fontWeight: 700,
-          marginLeft: isMobile ? 2 : 6,
-          flexShrink: 0,
-          cursor: "pointer",
-          boxShadow: "0 0 0 2px hsl(var(--md-sys-color-surface-container-low)), 0 0 0 3.5px hsl(var(--md-sys-color-primary) / 0.4)",
-          letterSpacing: "0.5px",
-        }}
-        title="Alex Chen"
+        ref={avatarMenuRef}
+        style={{ position: "relative", marginLeft: isMobile ? 2 : 6, flexShrink: 0 }}
       >
-        AC
+        <div
+          onClick={() => setAvatarMenuOpen((v) => !v)}
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: "50%",
+            backgroundColor: "hsl(var(--md-sys-color-primary))",
+            color: "hsl(var(--md-sys-color-on-primary))",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: "pointer",
+            boxShadow: "0 0 0 2px hsl(var(--md-sys-color-surface-container-low)), 0 0 0 3.5px hsl(var(--md-sys-color-primary) / 0.4)",
+            letterSpacing: "0.5px",
+            userSelect: "none",
+          }}
+          title={user?.name ?? "Account"}
+        >
+          {user?.initials ?? "?"}
+        </div>
+
+        {avatarMenuOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "calc(100% + 8px)",
+              right: 0,
+              width: 260,
+              backgroundColor: "hsl(var(--md-sys-color-surface-container))",
+              borderRadius: 16,
+              boxShadow: "0 4px 20px rgba(0,0,0,0.16)",
+              zIndex: 200,
+              overflow: "hidden",
+            }}
+          >
+            {/* User info */}
+            <div
+              style={{
+                padding: "20px 20px 16px",
+                borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: "50%",
+                  backgroundColor: "hsl(var(--md-sys-color-primary))",
+                  color: "hsl(var(--md-sys-color-on-primary))",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 16,
+                  fontWeight: 700,
+                  flexShrink: 0,
+                  letterSpacing: "0.5px",
+                }}
+              >
+                {user?.initials ?? "?"}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 600,
+                    color: "hsl(var(--md-sys-color-on-surface))",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {user?.name}
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "hsl(var(--md-sys-color-on-surface-variant))",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {user?.email}
+                </div>
+              </div>
+            </div>
+
+            {/* Sign out */}
+            <button
+              onClick={() => { setAvatarMenuOpen(false); logout(); }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                width: "100%",
+                padding: "14px 20px",
+                border: 0,
+                background: "transparent",
+                color: "hsl(var(--md-sys-color-on-surface))",
+                fontSize: 14,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                textAlign: "left",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                  "hsl(var(--md-sys-color-surface-container-high))";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+              }}
+            >
+              <md-icon style={{ fontSize: "20px", color: "hsl(var(--md-sys-color-on-surface-variant))" }}>
+                logout
+              </md-icon>
+              Sign out
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

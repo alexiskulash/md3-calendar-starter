@@ -4,6 +4,8 @@ import "@material/web/iconbutton/icon-button.js";
 import "@material/web/divider/divider.js";
 import { useIsMobile } from "../hooks/useIsMobile";
 
+import { AuthProvider, useAuth } from "../components/auth/AuthContext";
+import { LoginPage } from "../components/auth/LoginPage";
 import { CalendarLayout } from "../components/calendar/CalendarLayout";
 import { useCalendar } from "../components/calendar/CalendarContext";
 import { TopBar } from "../components/calendar/TopBar";
@@ -222,12 +224,24 @@ function CalendarApp() {
   );
 }
 
-// ─── Page export ──────────────────────────────────────────────────────────────
+// ─── Auth gate ───────────────────────────────────────────────────────────────
 
-export default function Index() {
+function AuthGate() {
+  const { user } = useAuth();
+  if (!user) return <LoginPage />;
   return (
     <CalendarLayout>
       <CalendarApp />
     </CalendarLayout>
+  );
+}
+
+// ─── Page export ──────────────────────────────────────────────────────────────
+
+export default function Index() {
+  return (
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
   );
 }
