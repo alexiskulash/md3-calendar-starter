@@ -23,7 +23,7 @@ interface TopBarProps {
 export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const { selectedDate, viewMode, setViewMode, goNext, goPrev, goToday, search, setSearch,
     use24h, setUse24h, weekStartsMonday, setWeekStartsMonday } = useCalendar();
-  const { jargonMode, setJargonMode, ghostMode, setGhostMode, aggressiveTimeBoxing, setAggressiveTimeBoxing, showModal } = useUnhinged();
+  const { jargonMode, setJargonMode, ghostMode, setGhostMode, aggressiveTimeBoxing, setAggressiveTimeBoxing, showModal, theme, setTheme } = useUnhinged();
   const isMobile = useIsMobile();
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -278,6 +278,39 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                 }}
               >
                 Settings
+              </div>
+
+              {/* Theme Selector */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "12px 16px",
+                  borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
+                }}
+              >
+                <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
+                  Theme
+                </span>
+                <select
+                  value={theme}
+                  onChange={(e) => setTheme(e.target.value as any)}
+                  style={{
+                    backgroundColor: "hsl(var(--md-sys-color-surface-container-high))",
+                    color: "hsl(var(--md-sys-color-on-surface))",
+                    border: "1px solid hsl(var(--md-sys-color-outline-variant))",
+                    borderRadius: 4,
+                    padding: "4px 8px",
+                    fontSize: 14,
+                    outline: "none",
+                  }}
+                >
+                  <option value="light">Light Mode</option>
+                  <option value="dark">Dark Mode</option>
+                  <option value="90s">Radical 90s</option>
+                  <option value="70s">Groovy 70s</option>
+                </select>
               </div>
 
               {/* Time format toggle */}

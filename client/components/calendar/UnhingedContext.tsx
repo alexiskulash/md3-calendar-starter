@@ -8,6 +8,8 @@ interface ModalState {
   resolve?: (value: any) => void;
 }
 
+export type AppTheme = "light" | "dark" | "90s" | "70s";
+
 interface UnhingedContextValue {
   jargonMode: boolean;
   setJargonMode: Dispatch<SetStateAction<boolean>>;
@@ -15,6 +17,8 @@ interface UnhingedContextValue {
   setGhostMode: Dispatch<SetStateAction<boolean>>;
   aggressiveTimeBoxing: boolean;
   setAggressiveTimeBoxing: Dispatch<SetStateAction<boolean>>;
+  theme: AppTheme;
+  setTheme: Dispatch<SetStateAction<AppTheme>>;
   showModal: (title: string, message: ReactNode, type?: "alert" | "confirm" | "prompt") => Promise<any>;
 }
 
@@ -35,6 +39,9 @@ export function UnhingedProvider({ children }: { children: ReactNode }) {
   });
   const [aggressiveTimeBoxing, setAggressiveTimeBoxing] = useState(() => {
     try { return localStorage.getItem("unhinged_aggressiveTimeBoxing") === "true"; } catch { return false; }
+  });
+  const [theme, setTheme] = useState<AppTheme>(() => {
+    try { return (localStorage.getItem("unhinged_theme") as AppTheme) || "light"; } catch { return "light"; }
   });
 
   const [modalState, setModalState] = useState<ModalState | null>(null);
@@ -73,6 +80,17 @@ export function UnhingedProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem("unhinged_aggressiveTimeBoxing", String(aggressiveTimeBoxing)); } catch {}
   }, [aggressiveTimeBoxing]);
 
+  useEffect(() => {
+    try { localStorage.setItem("unhinged_theme", theme); } catch {}
+
+    // Apply theme classes to document root
+    const root = document.documentElement;
+    root.classList.remove("dark", "theme-90s", "theme-70s");
+    if (theme !== "light") {
+      root.classList.add(theme === "dark" ? "dark" : `theme-${theme}`);
+    }
+  }, [theme]);
+
   return (
     <UnhingedContext.Provider
       value={{
@@ -82,6 +100,8 @@ export function UnhingedProvider({ children }: { children: ReactNode }) {
         setGhostMode,
         aggressiveTimeBoxing,
         setAggressiveTimeBoxing,
+        theme,
+        setTheme,
         showModal,
       }}
     >
