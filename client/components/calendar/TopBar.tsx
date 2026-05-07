@@ -64,6 +64,34 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
     setSearch("");
   };
 
+  const handleShowTour = async () => {
+    await showModal(
+      "Welcome to the Unhinged Corporate Calendar!",
+      "Act 1: The Settings Menu of Doom\n1. Click the Gear (Settings) icon in the top right.\n2. Try toggling Jargon Translator, Aggressive Time-Boxing, or even 'Ghost Mode'.\n3. Play with the new Themes (Radical 90s, Groovy 70s).",
+      "alert"
+    );
+    await showModal(
+      "Act 2: The Mystery Box",
+      "Open the left sidebar (Hamburger Menu on mobile). Click the dark 'Add Schrödinger's Block' button. Look at your calendar for today—a new '???' event has appeared. Click it to find out your fate!",
+      "alert"
+    );
+    await showModal(
+      "Act 3: Scheduling Chaos",
+      "Click the 'Create' button. Notice you are now being charged an Estimated Cost for the privilege of creating a meeting. Click the 'Meeting Roulette' button to add random guests. Title your event 'Lunch' to anger your virtual boss.",
+      "alert"
+    );
+    await showModal(
+      "Act 4: Passive Aggressive RSVPs",
+      "Click on an existing event. Try to RSVP 'Yes' to trigger the Escape Room CAPTCHA, or RSVP 'No' to trigger a Reply-All threat with pie charts.",
+      "alert"
+    );
+    await showModal(
+      "Act 5: Double-Book Deathmatch",
+      "Try to create an event at the exact same time as an existing event to trigger the Cage Match Protocol.",
+      "alert"
+    );
+  };
+
   return (
     <header
       style={{
@@ -187,6 +215,15 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
 
       {!isMobile && (
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          {/* Demo Walkthrough Button */}
+          <md-icon-button
+            aria-label="Interactive Demo Walkthrough"
+            onClick={handleShowTour}
+            style={{ color: "hsl(var(--md-sys-color-primary))" }}
+          >
+            <md-icon>help_outline</md-icon>
+          </md-icon-button>
+
           {searchExpanded && (
             <div
               style={{
