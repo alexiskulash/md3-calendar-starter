@@ -100,18 +100,18 @@ export function MiniCalendar({ selectedDate, onDateSelect }: MiniCalendarProps) 
           const isDayToday = isToday(day);
           const isSelected = isSameDay(day, selectedDate);
 
-          let bgColor = "transparent";
-          let textColor = isCurrentMonth
-            ? "hsl(var(--md-sys-color-on-surface))"
-            : "hsl(var(--md-sys-color-on-surface-variant) / 0.4)";
+          let bgColorClass = "bg-transparent";
+          let textColorClass = isCurrentMonth
+            ? "text-surface-foreground"
+            : "text-surface-variant-foreground/40";
 
           if (isDayToday && !isSelected) {
-            bgColor = "hsl(var(--md-sys-color-primary-container))";
-            textColor = "hsl(var(--md-sys-color-on-primary-container))";
+            bgColorClass = "bg-primary-container";
+            textColorClass = "text-primary-container-foreground";
           }
           if (isSelected) {
-            bgColor = "hsl(var(--md-sys-color-primary))";
-            textColor = "hsl(var(--md-sys-color-on-primary))";
+            bgColorClass = "bg-primary";
+            textColorClass = "text-primary-foreground";
           }
 
           return (
@@ -123,13 +123,12 @@ export function MiniCalendar({ selectedDate, onDateSelect }: MiniCalendarProps) 
                   setViewMonth(new Date(day));
                 }
               }}
+              className={`${bgColorClass} ${textColorClass}`}
               style={{
                 width: "100%",
                 aspectRatio: "1",
                 border: "none",
                 borderRadius: "50%",
-                backgroundColor: bgColor,
-                color: textColor,
                 fontSize: "12px",
                 fontWeight: isSelected || isDayToday ? "600" : "400",
                 cursor: "pointer",

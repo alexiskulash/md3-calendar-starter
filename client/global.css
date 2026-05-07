@@ -143,6 +143,11 @@
     overflow-x: auto;
     white-space: pre;
   }
+
+  ::selection {
+    background-color: hsl(var(--md-sys-color-primary));
+    color: hsl(var(--md-sys-color-on-primary));
+  }
 }
 
 /* Material Design 3 Web Components customization */
@@ -154,6 +159,13 @@ md-filled-button {
 md-outlined-button {
   --md-outlined-button-outline-color: hsl(var(--md-sys-color-outline));
   --md-outlined-button-label-text-color: hsl(var(--md-sys-color-primary));
+}
+
+md-switch {
+  --md-switch-selected-track-color: hsl(var(--md-sys-color-primary));
+  --md-switch-selected-handle-color: hsl(var(--md-sys-color-on-primary));
+  --md-switch-selected-hover-track-color: hsl(var(--md-sys-color-primary));
+  --md-switch-selected-hover-handle-color: hsl(var(--md-sys-color-primary-container));
 }
 
 md-elevated-card {
