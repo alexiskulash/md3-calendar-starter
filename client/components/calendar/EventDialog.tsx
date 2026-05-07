@@ -4,6 +4,7 @@ import "@material/web/iconbutton/icon-button.js";
 import { CalendarEvent } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { useUnhinged } from "./UnhingedContext";
 
 interface EventDialogProps {
   open: boolean;
@@ -24,7 +25,8 @@ export function EventDialog({
   onDelete,
   onClose,
 }: EventDialogProps) {
-  const { calendars } = useCalendar();
+  const { calendars, events } = useCalendar();
+  const { ghostMode, showModal } = useUnhinged();
   const isMobile = useIsMobile();
   const isEditing = !!event;
   const today = new Date(2026, 3, 28).toISOString().split("T")[0];
@@ -34,6 +36,8 @@ export function EventDialog({
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
   const [cal, setCal] = useState(calendars[0]?.id ?? "me");
+  const [attendees, setAttendees] = useState<number | undefined>(undefined);
+  const [desc, setDesc] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (open) {
@@ -43,8 +47,12 @@ export function EventDialog({
         setStartTime(event.startTime);
         setEndTime(event.endTime);
         setCal(event.cal);
+        setAttendees(event.attendees);
+        setDesc(event.desc);
       } else {
         setTitle("");
+        setAttendees(undefined);
+        setDesc(undefined);
         setDate(defaultDate ?? today);
         setStartTime(defaultStartTime ?? "09:00");
         const [h, m] = (defaultStartTime ?? "09:00").split(":").map(Number);
@@ -64,10 +72,44 @@ export function EventDialog({
     return () => document.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) return;
-    onSave({ id: event?.id, title: title.trim(), date, startTime, endTime, cal });
+
+    // Guilt-trip Boss Check
+    const lTitle = title.toLowerCase();
+    if (lTitle.includes("focus time") || lTitle.includes("lunch") || lTitle.includes("break")) {
+      const proceed = await showModal(
+        "Boss Clippy",
+        "Wow, taking a break already? Your peers are working 14 hour days. Are you sure you want to save this?",
+        "confirm"
+      );
+      if (!proceed) return;
+    }
+
+    // Double-Book Deathmatch Check
+    const isDoubleBooked = events.some(e => {
+      if (e.id === event?.id) return false;
+      if (e.date !== date) return false;
+      return (startTime < e.endTime && endTime > e.startTime);
+    });
+
+    if (isDoubleBooked) {
+      await showModal(
+        "⚠️ DOUBLE BOOK DETECTED! ⚠️",
+        "Initiating Cage Match Protocol. The winner will keep this time slot.",
+        "alert"
+      );
+    }
+
+    onSave({ id: event?.id, title: title.trim(), date, startTime, endTime, cal, attendees, desc });
     onClose();
+  };
+
+  const handleMeetingRoulette = () => {
+    const funnyNames = ["The Summer Intern", "Steve from Accounting", "CEO's Dog", "Bob from Board of Directors", "Random Delivery Guy"];
+    const shuffled = funnyNames.sort(() => 0.5 - Math.random()).slice(0, 3);
+    setAttendees((attendees || 0) + 3);
+    setDesc((prev) => (prev ? prev + "\n" : "") + `Roulette Attendees: ${shuffled.join(", ")}`);
   };
 
   const handleDelete = () => {
@@ -173,6 +215,7 @@ export function EventDialog({
             }}
           >
             {isEditing ? "Edit Event" : "New Event"}
+            {!isEditing && <span style={{ fontSize: 12, marginLeft: 8, color: "green" }}>[Estimated Cost: ${Math.floor(Math.random() * 500) + 50}.00]</span>}
           </span>
           <md-icon-button onClick={onClose} aria-label="Close">
             <md-icon>close</md-icon>
@@ -273,6 +316,27 @@ export function EventDialog({
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Meeting Roulette Button */}
+          <div>
+            <button
+              onClick={handleMeetingRoulette}
+              type="button"
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: 8,
+                border: "1px dashed hsl(var(--md-sys-color-primary))",
+                backgroundColor: "transparent",
+                color: "hsl(var(--md-sys-color-primary))",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+            >
+              🎲 Meeting Roulette (Invite Randoms)
+            </button>
+            {desc && <div style={{ fontSize: 12, marginTop: 4, whiteSpace: "pre-wrap" }}>{desc}</div>}
           </div>
         </div>
 

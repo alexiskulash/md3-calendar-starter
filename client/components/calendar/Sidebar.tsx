@@ -1,8 +1,10 @@
 import "@material/web/icon/icon.js";
 import "@material/web/divider/divider.js";
+import { useState, useRef, useEffect } from "react";
 import { MiniCalendar } from "./MiniCalendar";
 import { useCalendar } from "./CalendarContext";
 import { Calendar } from "../../types/calendar";
+import { useUnhinged } from "./UnhingedContext";
 
 interface SidebarProps {
   onCreateEvent: () => void;
@@ -112,7 +114,44 @@ function SidebarSection({
 }
 
 export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarProps) {
-  const { selectedDate, setSelectedDate, calendars, calOn, toggleCal } = useCalendar();
+  const { selectedDate, setSelectedDate, calendars, calOn, toggleCal, addEvent } = useCalendar();
+  const { showModal } = useUnhinged();
+  const [width, setWidth] = useState(280);
+  const isResizing = useRef(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing.current) return;
+      const newWidth = Math.min(Math.max(e.clientX, 200), 400); // min 200px, max 400px
+      setWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      isResizing.current = false;
+      document.body.style.cursor = 'default';
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
+
+  const handleSchrodinger = async () => {
+    const isBoss = Math.random() > 0.5;
+    addEvent({
+      title: "???",
+      date: selectedDate.toISOString().split("T")[0],
+      startTime: "13:00",
+      endTime: "14:00",
+      cal: "me",
+      desc: isBoss ? "1:1 with the CEO. Good luck." : "Mandatory HR Training. Bring coffee.",
+    });
+    await showModal("Added", "Schrödinger's Meeting added. You won't know what it is until you open it.", "alert");
+  };
 
   const mine = calendars.filter((c) => c.kind === "mine");
   const other = calendars.filter((c) => c.kind === "other");
@@ -120,14 +159,14 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
   return (
     <div
       style={{
-        width: 280,
+        width,
         flexShrink: 0,
         height: "100%",
         display: "flex",
         flexDirection: "column",
         backgroundColor: "hsl(var(--md-sys-color-surface))",
         borderRight: "1px solid hsl(var(--md-sys-color-outline-variant))",
-        overflowY: "auto",
+        position: "relative",
         ...(isOverlay
           ? {
               position: "fixed",
@@ -140,7 +179,8 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
           : {}),
       }}
     >
-      {/* Create button — extended FAB style */}
+      <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+        {/* Create button — extended FAB style */}
       <div style={{ padding: "12px 16px 8px" }}>
         <button
           onClick={onCreateEvent}
@@ -181,6 +221,32 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
           </md-icon>
           Create
         </button>
+
+        {/* Schrödinger's Meeting button */}
+        <button
+          onClick={handleSchrodinger}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginTop: 8,
+            padding: "0 20px 0 16px",
+            height: 48,
+            backgroundColor: "#2c3e50",
+            border: "none",
+            borderRadius: 16,
+            cursor: "pointer",
+            width: "100%",
+            fontSize: 13,
+            fontWeight: 500,
+            color: "white",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+            fontFamily: "inherit",
+          }}
+        >
+          <span style={{ fontSize: "20px" }}>📦</span>
+          Add Schrödinger's Block
+        </button>
       </div>
 
       {/* Mini calendar */}
@@ -205,6 +271,27 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
         calOn={calOn}
         toggleCal={toggleCal}
       />
+      </div>
+
+      {/* Resize handle */}
+      {!isOverlay && (
+        <div
+          onMouseDown={(e) => {
+            e.preventDefault();
+            isResizing.current = true;
+            document.body.style.cursor = 'col-resize';
+          }}
+          style={{
+            position: "absolute",
+            top: 0,
+            right: -3,
+            width: 6,
+            height: "100%",
+            cursor: "col-resize",
+            zIndex: 10,
+          }}
+        />
+      )}
     </div>
   );
 }

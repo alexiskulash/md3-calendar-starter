@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { format, addDays, subDays, addWeeks, subWeeks, addMonths, subMonths } from "date-fns";
 import { Calendar, CalendarEvent, ViewMode } from "../../types/calendar";
 import { CalendarContext } from "./CalendarContext";
+import { useUnhinged } from "./UnhingedContext";
 
 // ─── Static calendars ─────────────────────────────────────────────────────────
 
@@ -98,6 +99,8 @@ export function CalendarLayout({ children }: CalendarLayoutProps) {
   const [use24h, setUse24h] = useState(false);
   const [weekStartsMonday, setWeekStartsMonday] = useState(false);
 
+  const { jargonMode, ghostMode } = useUnhinged();
+
   const initialCalOn = useMemo<Record<string, boolean>>(() => {
     const on: Record<string, boolean> = {};
     CALENDARS.forEach((c) => (on[c.id] = true));
@@ -115,6 +118,8 @@ export function CalendarLayout({ children }: CalendarLayoutProps) {
   );
 
   const filteredEvents = useMemo(() => {
+    if (ghostMode) return [];
+
     let result = events.filter((e) => calOn[e.cal]);
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -124,12 +129,27 @@ export function CalendarLayout({ children }: CalendarLayoutProps) {
           (e.loc ?? "").toLowerCase().includes(q)
       );
     }
+
+    if (jargonMode) {
+      result = result.map(e => {
+        let newTitle = e.title;
+        const lower = e.title.toLowerCase();
+        if (lower.includes("sync") || lower.includes("standup")) newTitle = "Chatting about weekends";
+        else if (lower.includes("review")) newTitle = "Nodding at slides";
+        else if (lower.includes("1:1")) newTitle = "Awkward Silence";
+        else if (lower.includes("all hands")) newTitle = "Paid Nap";
+        else if (lower.includes("planning") || lower.includes("roadmap")) newTitle = "Guessing the future";
+        else if (lower.includes("customer")) newTitle = "Apologizing to strangers";
+        return { ...e, title: newTitle };
+      });
+    }
     return result;
-  }, [events, calOn, search]);
+  }, [events, calOn, search, ghostMode, jargonMode]);
 
   const goNext = useCallback(() => {
     setSelectedDate((prev) => {
       if (viewMode === "day") return addDays(prev, 1);
+      if (viewMode === "3day") return addDays(prev, 3);
       if (viewMode === "week") return addWeeks(prev, 1);
       if (viewMode === "schedule") return addDays(prev, 7);
       return addMonths(prev, 1);
@@ -139,6 +159,7 @@ export function CalendarLayout({ children }: CalendarLayoutProps) {
   const goPrev = useCallback(() => {
     setSelectedDate((prev) => {
       if (viewMode === "day") return subDays(prev, 1);
+      if (viewMode === "3day") return subDays(prev, 3);
       if (viewMode === "week") return subWeeks(prev, 1);
       if (viewMode === "schedule") return subDays(prev, 7);
       return subMonths(prev, 1);

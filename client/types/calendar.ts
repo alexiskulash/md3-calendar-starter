@@ -1,4 +1,4 @@
-export type ViewMode = "month" | "week" | "day" | "schedule";
+export type ViewMode = "month" | "week" | "day" | "3day" | "schedule";
 
 export interface Calendar {
   id: string;

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { CalendarEvent } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { useUnhinged } from "./UnhingedContext";
 
 interface EventPopoverProps {
   event: CalendarEvent | null;
@@ -29,8 +30,37 @@ function fmtDate(dateStr: string): string {
 
 export function EventPopover({ event, anchor, onClose, onEdit, onDelete }: EventPopoverProps) {
   const { getCalendar, use24h } = useCalendar();
+  const { showModal } = useUnhinged();
   const isMobile = useIsMobile();
   const ref = useRef<HTMLDivElement>(null);
+
+  const handleRsvpYes = async () => {
+    const answer = await showModal(
+      "Corporate CAPTCHA",
+      "Type 'Synergy' to accept this meeting.",
+      "prompt"
+    );
+    if (answer === "Synergy" || answer === "synergy") {
+      await showModal("Success", "RSVP Accepted. Prepare for synergistic alignment.", "alert");
+    } else if (answer !== null) {
+      await showModal("Denied", "CAPTCHA failed. You clearly do not have enough synergy. RSVP denied.", "alert");
+    }
+  };
+
+  const handleRsvpNo = async () => {
+    const proceed = await showModal(
+      "WARNING",
+      "Declining this meeting will automatically send a 'Reply All' email explaining exactly why you think this meeting is a waste of time, complete with generated pie charts.\n\nProceed?",
+      "confirm"
+    );
+    if (proceed) {
+      await showModal("Sent", "Reply-All sent. You are now a corporate legend.", "alert");
+    }
+  };
+
+  const handleRsvpMaybe = async () => {
+    await showModal("Recorded", "Maybe? Schrödinger's RSVP recorded.", "alert");
+  };
 
   useEffect(() => {
     if (!event) return;
@@ -240,31 +270,75 @@ export function EventPopover({ event, anchor, onClose, onEdit, onDelete }: Event
             >
               Going?
             </span>
-            {["Yes", "No", "Maybe"].map((label) => (
-              <button
-                key={label}
-                style={{
-                  padding: "6px 12px",
-                  border: 0,
-                  borderRadius: 20,
-                  backgroundColor: "transparent",
-                  color: "hsl(var(--md-sys-color-primary))",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                    "hsl(var(--md-sys-color-primary-container) / 0.5)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
-                }}
-              >
-                {label}
-              </button>
-            ))}
+            <button
+              onClick={handleRsvpYes}
+              style={{
+                padding: "6px 12px",
+                border: 0,
+                borderRadius: 20,
+                backgroundColor: "transparent",
+                color: "hsl(var(--md-sys-color-primary))",
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                  "hsl(var(--md-sys-color-primary-container) / 0.5)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+              }}
+            >
+              Yes
+            </button>
+            <button
+              onClick={handleRsvpNo}
+              style={{
+                padding: "6px 12px",
+                border: 0,
+                borderRadius: 20,
+                backgroundColor: "transparent",
+                color: "hsl(var(--md-sys-color-primary))",
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                  "hsl(var(--md-sys-color-primary-container) / 0.5)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+              }}
+            >
+              No
+            </button>
+            <button
+              onClick={handleRsvpMaybe}
+              style={{
+                padding: "6px 12px",
+                border: 0,
+                borderRadius: 20,
+                backgroundColor: "transparent",
+                color: "hsl(var(--md-sys-color-primary))",
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                  "hsl(var(--md-sys-color-primary-container) / 0.5)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+              }}
+            >
+              Maybe
+            </button>
           </div>
         </div>
       </div>

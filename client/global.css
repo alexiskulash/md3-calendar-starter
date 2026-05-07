@@ -105,8 +105,67 @@
     --md-sys-color-background: 220 15% 8%;
     --md-sys-color-on-background: 220 5% 90%;
 
+    --md-sys-color-surface-container-low: 220 15% 12%;
+    --md-sys-color-surface-container: 220 15% 14%;
+    --md-sys-color-surface-container-high: 220 15% 16%;
+    --md-sys-color-surface-container-highest: 220 15% 20%;
+
     --md-sys-color-outline: 220 5% 60%;
     --md-sys-color-outline-variant: 220 10% 30%;
+  }
+
+  .theme-90s {
+    /* Radical 90s Theme (Memphis/Cyber/Hot Pink & Yellow) */
+    --md-sys-color-primary: 315 100% 50%;
+    --md-sys-color-on-primary: 0 0% 100%;
+    --md-sys-color-primary-container: 180 100% 50%;
+    --md-sys-color-on-primary-container: 0 0% 0%;
+
+    --md-sys-color-surface: 0 0% 100%;
+    --md-sys-color-on-surface: 240 100% 40%; /* Blue text */
+    --md-sys-color-surface-variant: 300 100% 90%;
+    --md-sys-color-on-surface-variant: 240 100% 30%;
+
+    --md-sys-color-background: 60 100% 50%; /* Bright Yellow */
+    --md-sys-color-on-background: 240 100% 40%;
+
+    --md-sys-color-surface-container-low: 0 0% 100%;
+    --md-sys-color-surface-container: 300 100% 95%;
+    --md-sys-color-surface-container-high: 180 100% 90%;
+    --md-sys-color-surface-container-highest: 315 100% 90%;
+
+    --md-sys-color-outline: 0 0% 0%; /* Stark black borders */
+    --md-sys-color-outline-variant: 0 0% 0%;
+
+    /* 90s Typography! */
+    --font-override: "Comic Sans MS", "Chalkboard SE", "Marker Felt", sans-serif;
+  }
+
+  .theme-70s {
+    /* Groovy 70s Theme (Mustard, Orange, Brown) */
+    --md-sys-color-primary: 20 90% 40%; /* Burnt Orange */
+    --md-sys-color-on-primary: 45 100% 90%; /* Pale yellow */
+    --md-sys-color-primary-container: 30 70% 30%; /* Brown */
+    --md-sys-color-on-primary-container: 45 100% 80%;
+
+    --md-sys-color-surface: 40 60% 85%; /* Retro Beige */
+    --md-sys-color-on-surface: 30 90% 15%; /* Dark Brown */
+    --md-sys-color-surface-variant: 80 40% 60%; /* Olive Green */
+    --md-sys-color-on-surface-variant: 30 90% 10%;
+
+    --md-sys-color-background: 35 70% 70%; /* Darker beige/orange */
+    --md-sys-color-on-background: 30 90% 15%;
+
+    --md-sys-color-surface-container-low: 40 60% 80%;
+    --md-sys-color-surface-container: 40 60% 75%;
+    --md-sys-color-surface-container-high: 40 60% 70%;
+    --md-sys-color-surface-container-highest: 80 40% 75%; /* Olive tint */
+
+    --md-sys-color-outline: 30 50% 40%; /* Brown outline */
+    --md-sys-color-outline-variant: 30 50% 50%;
+
+    /* 70s Typography! */
+    --font-override: "Cooper Black", "Georgia", "Times New Roman", serif;
   }
 }
 
@@ -118,12 +177,7 @@
   body {
     background: hsl(var(--md-sys-color-background));
     color: hsl(var(--md-sys-color-on-background));
-    font-family:
-      "Roboto",
-      -apple-system,
-      BlinkMacSystemFont,
-      "Segoe UI",
-      sans-serif;
+    font-family: var(--font-override, "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
   }
 
   :where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
