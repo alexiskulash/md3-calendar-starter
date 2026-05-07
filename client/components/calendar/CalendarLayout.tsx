@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, useEffect } from "react";
 import { format, addDays, subDays, addWeeks, subWeeks, addMonths, subMonths } from "date-fns";
 import { Calendar, CalendarEvent, ViewMode } from "../../types/calendar";
 import { CalendarContext } from "./CalendarContext";
+import { useAuth } from "../../context/AuthContext";
 
 // ─── Static calendars ─────────────────────────────────────────────────────────
 
@@ -16,6 +17,12 @@ const CALENDARS: Calendar[] = [
 ];
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
+
+const CALENDAR_STORAGE_KEY_PREFIX = "calendar_events_";
+
+function getStorageKey(accountId: string) {
+  return `${CALENDAR_STORAGE_KEY_PREFIX}${accountId}`;
+}
 
 function d(month0: number, day: number, h: number, m: number = 0): string {
   // Returns YYYY-MM-DD string. month0 is 0-based (3=April)
@@ -86,6 +93,8 @@ interface CalendarLayoutProps {
 }
 
 export function CalendarLayout({ children }: CalendarLayoutProps) {
+  const { activeAccount } = useAuth();
+
   // "Today" is Apr 28 2026 to match the design data
   const today = useMemo(() => new Date(2026, 3, 28, 10, 24), []);
 
@@ -93,7 +102,44 @@ export function CalendarLayout({ children }: CalendarLayoutProps) {
   const [viewMode, setViewMode] = useState<ViewMode>(() =>
     typeof window !== "undefined" && window.innerWidth < 768 ? "day" : "week"
   );
-  const [events, setEvents] = useState<CalendarEvent[]>(generateSeedEvents);
+
+  // Initialize events based on active account and local storage
+  const [events, setEvents] = useState<CalendarEvent[]>(() => {
+    if (typeof window !== "undefined" && activeAccount) {
+      const stored = localStorage.getItem(getStorageKey(activeAccount.id));
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch (e) {
+          console.error("Failed to parse calendar events", e);
+        }
+      }
+    }
+    return generateSeedEvents();
+  });
+
+  // Handle account changes
+  useEffect(() => {
+    if (!activeAccount) return;
+
+    const stored = localStorage.getItem(getStorageKey(activeAccount.id));
+    if (stored) {
+      try {
+        setEvents(JSON.parse(stored));
+      } catch (e) {
+        console.error("Failed to parse calendar events", e);
+        setEvents(generateSeedEvents());
+      }
+    } else {
+      setEvents(generateSeedEvents());
+    }
+  }, [activeAccount]);
+
+  // Save events when they change
+  useEffect(() => {
+    if (!activeAccount) return;
+    localStorage.setItem(getStorageKey(activeAccount.id), JSON.stringify(events));
+  }, [events, activeAccount]);
   const [search, setSearch] = useState("");
   const [use24h, setUse24h] = useState(false);
   const [weekStartsMonday, setWeekStartsMonday] = useState(false);
