@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { startOfWeek, endOfWeek, eachDayOfInterval, format, isToday } from "date-fns";
+import { startOfWeek, endOfWeek, eachDayOfInterval, format, isToday, addDays } from "date-fns";
 import { CalendarEvent } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
