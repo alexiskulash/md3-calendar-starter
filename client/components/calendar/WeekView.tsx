@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, isToday } from "date-fns";
 import { CalendarEvent } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
@@ -79,9 +79,10 @@ function layoutDayEvents(events: CalendarEvent[]): LayoutEvent[] {
 // ─── WeekView component ───────────────────────────────────────────────────────
 
 export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }: WeekViewProps) {
-  const { filteredEvents, getCalendar, use24h, weekStartsMonday } = useCalendar();
+  const { filteredEvents, getCalendar, use24h, weekStartsMonday, updateEvent } = useCalendar();
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   const HOUR_HEIGHT = isMobile ? 44 : 48;
   const TIME_COL_WIDTH = isMobile ? 44 : 56;
@@ -244,6 +245,58 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                 return (
                   <div
                     key={dayStr}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const eventId = e.dataTransfer.getData("text/plain");
+                      const metaStr = e.dataTransfer.getData("application/json");
+
+                      let offsetY = 0;
+                      try {
+                        if (metaStr) offsetY = JSON.parse(metaStr).offsetY;
+                      } catch (err) {}
+
+                      const event = filteredEvents.find((ev) => ev.id === eventId);
+                      if (!event) return;
+
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const y = e.clientY - rect.top - offsetY;
+
+                      const maxTop = 24 * HOUR_HEIGHT;
+                      const clampedY = Math.max(0, Math.min(y, maxTop));
+
+                      const minutes = (clampedY / HOUR_HEIGHT) * 60;
+                      const snappedMinutes = Math.round(minutes / 15) * 15;
+
+                      const startH = Math.floor(snappedMinutes / 60);
+                      const startM = snappedMinutes % 60;
+
+                      const duration = timeToMinutes(event.endTime) - timeToMinutes(event.startTime);
+                      const endMinutes = snappedMinutes + duration;
+
+                      let endH = Math.floor(endMinutes / 60);
+                      let endM = endMinutes % 60;
+
+                      if (endH >= 24) {
+                        endH = 23;
+                        endM = 59;
+                      }
+
+                      const formatTime = (hh: number, mm: number) => {
+                        const h = Math.min(23, Math.max(0, hh));
+                        return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+                      };
+
+                      updateEvent({
+                        ...event,
+                        date: dayStr,
+                        startTime: formatTime(startH, startM),
+                        endTime: formatTime(endH, endM),
+                      });
+                    }}
                     style={{
                       flex: 1,
                       minWidth: isMobile && days > 1 ? MIN_DAY_WIDTH : undefined,
@@ -287,6 +340,21 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       return (
                         <button
                           key={ev.id}
+                          draggable
+                          onDragStart={(e) => {
+                            e.stopPropagation();
+                            e.dataTransfer.setData("text/plain", ev.id);
+                            e.dataTransfer.effectAllowed = "move";
+
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const offsetY = e.clientY - rect.top;
+                            e.dataTransfer.setData("application/json", JSON.stringify({ offsetY }));
+
+                            setTimeout(() => setDraggingId(ev.id), 0);
+                          }}
+                          onDragEnd={() => {
+                            setDraggingId(null);
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             const rect = e.currentTarget.getBoundingClientRect();
@@ -313,6 +381,7 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                             lineHeight: 1.2,
                             zIndex: 1,
                             fontFamily: "inherit",
+                            opacity: draggingId === ev.id ? 0.5 : 1,
                           }}
                         >
                           <div
