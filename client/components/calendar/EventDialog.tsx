@@ -33,6 +33,7 @@ export function EventDialog({
   const [date, setDate] = useState(today);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
+  const [desc, setDesc] = useState("");
   const [cal, setCal] = useState(calendars[0]?.id ?? "me");
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export function EventDialog({
         setDate(event.date);
         setStartTime(event.startTime);
         setEndTime(event.endTime);
+        setDesc(event.desc ?? "");
         setCal(event.cal);
       } else {
         setTitle("");
@@ -51,6 +53,7 @@ export function EventDialog({
         setEndTime(
           `${String(Math.min(h + 1, 23)).padStart(2, "0")}:${String(m).padStart(2, "0")}`
         );
+        setDesc("");
         setCal(calendars.find((c) => c.kind === "mine")?.id ?? "me");
       }
     }
@@ -66,7 +69,7 @@ export function EventDialog({
 
   const handleSave = () => {
     if (!title.trim()) return;
-    onSave({ id: event?.id, title: title.trim(), date, startTime, endTime, cal });
+    onSave({ id: event?.id, title: title.trim(), date, startTime, endTime, cal, desc: desc.trim() });
     onClose();
   };
 
@@ -232,6 +235,17 @@ export function EventDialog({
                 style={fieldStyle}
               />
             </div>
+          </div>
+
+          {/* Details */}
+          <div>
+            <label style={labelStyle}>Details</label>
+            <textarea
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+              placeholder="Add details"
+              style={{ ...fieldStyle, minHeight: 80, resize: "vertical" }}
+            />
           </div>
 
           {/* Calendar picker */}
