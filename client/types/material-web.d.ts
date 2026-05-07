@@ -357,6 +357,7 @@ declare namespace JSX {
         label?: string;
         selected?: boolean;
         disabled?: boolean;
+        "no-checkmark"?: boolean;
       },
       HTMLElement
     >;

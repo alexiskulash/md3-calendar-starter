@@ -395,6 +395,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
               key={v.id}
               label={v.label}
               selected={viewMode === v.id ? true : undefined}
+              no-checkmark={true}
               onClick={() => setViewMode(v.id)}
             />
           ))}
