@@ -77,10 +77,12 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         zIndex: 10,
       }}
     >
-      {/* Hamburger */}
-      <md-icon-button onClick={onToggleSidebar} aria-label="Toggle sidebar">
-        <md-icon>menu</md-icon>
-      </md-icon-button>
+      {/* Hamburger — hidden on mobile since sidebar is completely disabled */}
+      {!isMobile && (
+        <md-icon-button onClick={onToggleSidebar} aria-label="Toggle sidebar">
+          <md-icon>menu</md-icon>
+        </md-icon-button>
+      )}
 
       {/* Logo: calendar icon with date + "Calendar" wordmark */}
       <div
@@ -303,7 +305,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   24-hour time
                 </span>
                 <button
-                  onClick={() => setUse24h((v) => !v)}
+                  onClick={() => setUse24h(!use24h)}
                   style={{
                     width: 40,
                     height: 24,
@@ -347,7 +349,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   Week starts Monday
                 </span>
                 <button
-                  onClick={() => setWeekStartsMonday((v) => !v)}
+                  onClick={() => setWeekStartsMonday(!weekStartsMonday)}
                   style={{
                     width: 40,
                     height: 24,

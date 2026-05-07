@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import "@material/web/icon/icon.js";
 import "@material/web/iconbutton/icon-button.js";
 import "@material/web/divider/divider.js";
+import "@material/web/fab/fab.js";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 import { CalendarLayout } from "../components/calendar/CalendarLayout";
@@ -163,26 +164,33 @@ function CalendarApp() {
 
       {/* Body */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
-        {/* Scrim for mobile drawer */}
-        {isMobile && sidebarOpen && (
-          <div
-            onClick={() => setSidebarOpen(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              backgroundColor: "rgba(0,0,0,0.32)",
-              zIndex: 199,
-            }}
+        {/* Sidebar — hidden completely on mobile, inline on desktop */}
+        {!isMobile && sidebarOpen && (
+          <Sidebar
+            onCreateEvent={() => openCreateDialog()}
+            isOverlay={false}
+            onClose={() => setSidebarOpen(false)}
           />
         )}
 
-        {/* Sidebar — inline on desktop, overlay on mobile */}
-        {sidebarOpen && (
-          <Sidebar
-            onCreateEvent={() => openCreateDialog()}
-            isOverlay={isMobile}
-            onClose={() => setSidebarOpen(false)}
-          />
+        {/* Mobile FAB */}
+        {isMobile && (
+          <div
+            style={{
+              position: "fixed",
+              bottom: 16,
+              right: 16,
+              zIndex: 100,
+            }}
+          >
+            <md-fab
+              variant="primary"
+              onClick={() => openCreateDialog()}
+              aria-label="Create event"
+            >
+              <md-icon slot="icon">add</md-icon>
+            </md-fab>
+          </div>
         )}
 
         <main

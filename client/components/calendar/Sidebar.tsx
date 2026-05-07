@@ -1,5 +1,6 @@
 import "@material/web/icon/icon.js";
 import "@material/web/divider/divider.js";
+import "@material/web/fab/fab.js";
 import { MiniCalendar } from "./MiniCalendar";
 import { useCalendar } from "./CalendarContext";
 import { Calendar } from "../../types/calendar";
@@ -142,45 +143,14 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
     >
       {/* Create button — extended FAB style */}
       <div style={{ padding: "12px 16px 8px" }}>
-        <button
+        <md-fab
+          variant="primary"
+          label="Create"
           onClick={onCreateEvent}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "0 20px 0 16px",
-            height: 56,
-            backgroundColor: "hsl(var(--md-sys-color-surface-container-low))",
-            border: "none",
-            borderRadius: 16,
-            cursor: "pointer",
-            width: "100%",
-            fontSize: 14,
-            fontWeight: 500,
-            color: "hsl(var(--md-sys-color-on-surface))",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)",
-            transition: "box-shadow 0.2s",
-            fontFamily: "inherit",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.boxShadow =
-              "0 4px 8px rgba(0,0,0,0.14), 0 2px 4px rgba(0,0,0,0.1)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.boxShadow =
-              "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)";
-          }}
+          style={{ width: "100%", "--md-fab-container-shape": "16px" } as React.CSSProperties}
         >
-          <md-icon
-            style={{
-              color: "hsl(var(--md-sys-color-primary))",
-              fontSize: "24px",
-            }}
-          >
-            add
-          </md-icon>
-          Create
-        </button>
+          <md-icon slot="icon">add</md-icon>
+        </md-fab>
       </div>
 
       {/* Mini calendar */}
@@ -205,6 +175,15 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
         calOn={calOn}
         toggleCal={toggleCal}
       />
+
+      {/* Cat Illustration at bottom */}
+      <div style={{ marginTop: "auto", padding: "16px", display: "flex", justifyContent: "center", opacity: 0.9 }}>
+        <img
+          src="https://images.pexels.com/photos/31606179/pexels-photo-31606179.jpeg"
+          alt="Cute cat illustration"
+          style={{ width: "100%", maxWidth: "180px", borderRadius: "16px", objectFit: "cover" }}
+        />
+      </div>
     </div>
   );
 }
