@@ -5,9 +5,11 @@ import { format } from "date-fns";
 import { ViewMode } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { useUnhinged } from "./UnhingedContext";
 
 const VIEWS: { id: ViewMode; label: string }[] = [
   { id: "day", label: "Day" },
+  { id: "3day", label: "3 Day" },
   { id: "week", label: "Week" },
   { id: "month", label: "Month" },
   { id: "schedule", label: "Schedule" },
@@ -21,6 +23,7 @@ interface TopBarProps {
 export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const { selectedDate, viewMode, setViewMode, goNext, goPrev, goToday, search, setSearch,
     use24h, setUse24h, weekStartsMonday, setWeekStartsMonday } = useCalendar();
+  const { jargonMode, setJargonMode, ghostMode, setGhostMode, aggressiveTimeBoxing, setAggressiveTimeBoxing, showModal } = useUnhinged();
   const isMobile = useIsMobile();
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +56,6 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
 
   const openSearch = () => {
     setSearchExpanded(true);
-    // Focus after the expand transition starts
     setTimeout(() => searchInputRef.current?.focus(), 50);
   };
 
@@ -77,12 +79,10 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         zIndex: 10,
       }}
     >
-      {/* Hamburger */}
       <md-icon-button onClick={onToggleSidebar} aria-label="Toggle sidebar">
         <md-icon>menu</md-icon>
       </md-icon-button>
 
-      {/* Logo: calendar icon with date + "Calendar" wordmark */}
       <div
         style={{
           display: "flex",
@@ -138,7 +138,6 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         )}
       </div>
 
-      {/* Today + Prev/Next */}
       <div style={{ display: "flex", alignItems: "center", gap: 2, marginLeft: isMobile ? 2 : 8 }}>
         {!isMobile && (
           <button
@@ -167,7 +166,6 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         </md-icon-button>
       </div>
 
-      {/* Date label */}
       <span
         style={{
           fontSize: isMobile ? 14 : 22,
@@ -187,10 +185,8 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
 
       {!isMobile && <div style={{ flex: 1 }} />}
 
-      {/* Search — hidden on mobile */}
       {!isMobile && (
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          {/* Expanded search field */}
           {searchExpanded && (
             <div
               style={{
@@ -230,7 +226,6 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   minWidth: 0,
                 }}
               />
-              {/* Clear / close */}
               <md-icon-button
                 aria-label="Clear search"
                 onClick={closeSearch}
@@ -240,8 +235,6 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
               </md-icon-button>
             </div>
           )}
-
-          {/* Search icon button — shown when collapsed */}
           {!searchExpanded && (
             <md-icon-button aria-label="Search" onClick={openSearch}>
               <md-icon>search</md-icon>
@@ -250,7 +243,6 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         </div>
       )}
 
-      {/* Settings — hidden on mobile */}
       {!isMobile && (
         <div ref={settingsRef} style={{ position: "relative", flexShrink: 0 }}>
           <md-icon-button
@@ -274,7 +266,6 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                 overflow: "hidden",
               }}
             >
-              {/* Header */}
               <div
                 style={{
                   padding: "12px 16px 8px",
@@ -303,7 +294,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   24-hour time
                 </span>
                 <button
-                  onClick={() => setUse24h((v) => !v)}
+                  onClick={() => setUse24h(!use24h)}
                   style={{
                     width: 40,
                     height: 24,
@@ -341,13 +332,14 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   alignItems: "center",
                   justifyContent: "space-between",
                   padding: "12px 16px",
+                  borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
                 }}
               >
                 <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
                   Week starts Monday
                 </span>
                 <button
-                  onClick={() => setWeekStartsMonday((v) => !v)}
+                  onClick={() => setWeekStartsMonday(!weekStartsMonday)}
                   style={{
                     width: 40,
                     height: 24,
@@ -377,6 +369,125 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   />
                 </button>
               </div>
+
+              {/* Aggressive Time-Boxing */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "12px 16px",
+                  borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
+                }}
+              >
+                <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
+                  Aggressive Time-Boxing
+                </span>
+                <button
+                  onClick={() => setAggressiveTimeBoxing((v) => !v)}
+                  style={{
+                    width: 40,
+                    height: 24,
+                    borderRadius: 12,
+                    border: 0,
+                    backgroundColor: aggressiveTimeBoxing
+                      ? "hsl(var(--md-sys-color-error))"
+                      : "hsl(var(--md-sys-color-outline-variant))",
+                    cursor: "pointer",
+                    position: "relative",
+                    transition: "background-color 0.2s",
+                    flexShrink: 0,
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 2,
+                      left: aggressiveTimeBoxing ? 18 : 2,
+                      width: 20,
+                      height: 20,
+                      borderRadius: "50%",
+                      backgroundColor: "#fff",
+                      transition: "left 0.2s",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                    }}
+                  />
+                </button>
+              </div>
+
+              {/* Jargon Translator */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "12px 16px",
+                  borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
+                }}
+              >
+                <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
+                  Jargon Translator
+                </span>
+                <button
+                  onClick={() => setJargonMode((v) => !v)}
+                  style={{
+                    width: 40,
+                    height: 24,
+                    borderRadius: 12,
+                    border: 0,
+                    backgroundColor: jargonMode
+                      ? "hsl(var(--md-sys-color-primary))"
+                      : "hsl(var(--md-sys-color-outline-variant))",
+                    cursor: "pointer",
+                    position: "relative",
+                    transition: "background-color 0.2s",
+                    flexShrink: 0,
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 2,
+                      left: jargonMode ? 18 : 2,
+                      width: 20,
+                      height: 20,
+                      borderRadius: "50%",
+                      backgroundColor: "#fff",
+                      transition: "left 0.2s",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                    }}
+                  />
+                </button>
+              </div>
+
+              {/* Ghost Mode Panic Button */}
+              <div
+                style={{
+                  padding: "12px 16px",
+                }}
+              >
+                <button
+                  onClick={async () => {
+                    const nextGhostMode = !ghostMode;
+                    setGhostMode(nextGhostMode);
+                    if (nextGhostMode) {
+                      await showModal("TRANSCENDENCE", "GHOST MODE ACTIVATED. YOU HAVE TRANSCENDED THE CORPORATE PLANE.", "alert");
+                    }
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: 8,
+                    border: 0,
+                    backgroundColor: ghostMode ? "#555" : "#D32F2F",
+                    color: "white",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                  }}
+                >
+                  {ghostMode ? "Disable Ghost Mode" : "🚨 PANIC BUTTON 🚨"}
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -387,7 +498,6 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         ref={viewDropdownRef}
         style={{ position: "relative", marginLeft: isMobile ? 0 : 4, flexShrink: 0 }}
       >
-        {/* Trigger button */}
         <button
           onClick={() => setViewDropdownOpen((v) => !v)}
           style={{
@@ -411,7 +521,6 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
           <span style={{ fontSize: 18, lineHeight: 1, color: "hsl(var(--md-sys-color-on-surface-variant))", marginRight: -2 }}>▾</span>
         </button>
 
-        {/* Dropdown menu */}
         {viewDropdownOpen && (
           <div
             style={{
@@ -472,12 +581,12 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
           width: 32,
           height: 32,
           borderRadius: "50%",
-          backgroundColor: "hsl(var(--md-sys-color-primary))",
+          backgroundColor: ghostMode ? "#333" : "hsl(var(--md-sys-color-primary))",
           color: "hsl(var(--md-sys-color-on-primary))",
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 13,
+          fontSize: 18,
           fontWeight: 600,
           marginLeft: isMobile ? 2 : 4,
           flexShrink: 0,
@@ -485,7 +594,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         }}
         title="Alex Chen"
       >
-        AC
+        {ghostMode ? "👻" : "AC"}
       </div>
     </header>
   );

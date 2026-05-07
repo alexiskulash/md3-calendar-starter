@@ -3,6 +3,7 @@ import "@material/web/divider/divider.js";
 import { MiniCalendar } from "./MiniCalendar";
 import { useCalendar } from "./CalendarContext";
 import { Calendar } from "../../types/calendar";
+import { useUnhinged } from "./UnhingedContext";
 
 interface SidebarProps {
   onCreateEvent: () => void;
@@ -112,7 +113,21 @@ function SidebarSection({
 }
 
 export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarProps) {
-  const { selectedDate, setSelectedDate, calendars, calOn, toggleCal } = useCalendar();
+  const { selectedDate, setSelectedDate, calendars, calOn, toggleCal, addEvent } = useCalendar();
+  const { showModal } = useUnhinged();
+
+  const handleSchrodinger = async () => {
+    const isBoss = Math.random() > 0.5;
+    addEvent({
+      title: "???",
+      date: selectedDate.toISOString().split("T")[0],
+      startTime: "13:00",
+      endTime: "14:00",
+      cal: "me",
+      desc: isBoss ? "1:1 with the CEO. Good luck." : "Mandatory HR Training. Bring coffee.",
+    });
+    await showModal("Added", "Schrödinger's Meeting added. You won't know what it is until you open it.", "alert");
+  };
 
   const mine = calendars.filter((c) => c.kind === "mine");
   const other = calendars.filter((c) => c.kind === "other");
@@ -180,6 +195,32 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
             add
           </md-icon>
           Create
+        </button>
+
+        {/* Schrödinger's Meeting button */}
+        <button
+          onClick={handleSchrodinger}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginTop: 8,
+            padding: "0 20px 0 16px",
+            height: 48,
+            backgroundColor: "#2c3e50",
+            border: "none",
+            borderRadius: 16,
+            cursor: "pointer",
+            width: "100%",
+            fontSize: 13,
+            fontWeight: 500,
+            color: "white",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+            fontFamily: "inherit",
+          }}
+        >
+          <span style={{ fontSize: "20px" }}>📦</span>
+          Add Schrödinger's Block
         </button>
       </div>
 

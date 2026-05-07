@@ -14,6 +14,7 @@ import { DayView } from "../components/calendar/DayView";
 import { ScheduleView } from "../components/calendar/ScheduleView";
 import { EventDialog } from "../components/calendar/EventDialog";
 import { EventPopover } from "../components/calendar/EventPopover";
+import { UnhingedProvider, useUnhinged } from "../components/calendar/UnhingedContext";
 import { CalendarEvent } from "../types/calendar";
 import { format } from "date-fns";
 
@@ -52,6 +53,8 @@ function CalendarApp() {
   );
   const [dialog, setDialog] = useState<DialogState>({ open: false });
   const [popover, setPopover] = useState<PopoverState | null>(null);
+
+  const { aggressiveTimeBoxing, ghostMode } = useUnhinged();
 
   // ── Event handlers ────────────────────────────────────────────────────────
 
@@ -97,6 +100,16 @@ function CalendarApp() {
     if (viewMode === "month") return format(selectedDate, "MMMM yyyy");
     if (viewMode === "day") return format(selectedDate, "EEEE, MMMM d, yyyy");
     if (viewMode === "schedule") return format(selectedDate, "MMMM yyyy");
+    if (viewMode === "3day") {
+      const d = new Date(selectedDate);
+      const end = new Date(selectedDate);
+      end.setDate(d.getDate() + 2);
+      if (d.getMonth() === end.getMonth())
+        return `${format(d, "MMM d")} – ${format(end, "d, yyyy")}`;
+      if (d.getFullYear() === end.getFullYear())
+        return `${format(d, "MMM d")} – ${format(end, "MMM d, yyyy")}`;
+      return `${format(d, "MMM d, yyyy")} – ${format(end, "MMM d, yyyy")}`;
+    }
     // week
     const d = new Date(selectedDate);
     const day = d.getDay();
@@ -119,6 +132,15 @@ function CalendarApp() {
           onDayClick={handleDayClick}
           onEventClick={openPopover}
           onCreateEvent={(date) => openCreateDialog(date)}
+        />
+      );
+    if (viewMode === "3day")
+      return (
+        <WeekView
+          currentDate={selectedDate}
+          days={3}
+          onEventClick={openPopover}
+          onCreateEvent={openCreateDialog}
         />
       );
     if (viewMode === "week")
@@ -155,6 +177,22 @@ function CalendarApp() {
         overflow: "hidden",
       }}
     >
+      {aggressiveTimeBoxing && (
+        <div style={{
+          backgroundColor: "red",
+          color: "white",
+          fontWeight: "bold",
+          fontSize: "24px",
+          textAlign: "center",
+          padding: "10px",
+          animation: "blink 1s infinite"
+        }}>
+          🚨 TIME-BOXING ENFORCED. OVERRUN MEETINGS WILL BE TERMINATED WITH PREJUDICE. 🚨
+          <style>{`
+            @keyframes blink { 50% { opacity: 0; } }
+          `}</style>
+        </div>
+      )}
       {/* Top bar */}
       <TopBar
         onToggleSidebar={() => setSidebarOpen((v) => !v)}
@@ -164,7 +202,7 @@ function CalendarApp() {
       {/* Body */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
         {/* Scrim for mobile drawer */}
-        {isMobile && sidebarOpen && (
+        {isMobile && sidebarOpen && !ghostMode && (
           <div
             onClick={() => setSidebarOpen(false)}
             style={{
@@ -177,7 +215,7 @@ function CalendarApp() {
         )}
 
         {/* Sidebar — inline on desktop, overlay on mobile */}
-        {sidebarOpen && (
+        {sidebarOpen && !ghostMode && (
           <Sidebar
             onCreateEvent={() => openCreateDialog()}
             isOverlay={isMobile}
@@ -193,7 +231,21 @@ function CalendarApp() {
             flexDirection: "column",
           }}
         >
-          {renderView()}
+          {!ghostMode ? renderView() : (
+            <div style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "column",
+              color: "hsl(var(--md-sys-color-on-surface-variant))",
+              opacity: 0.5,
+            }}>
+              <span style={{ fontSize: "120px", marginBottom: "16px" }}>👻</span>
+              <h2>You have transcended the corporate plane.</h2>
+              <p>There are no meetings here. Only peace.</p>
+            </div>
+          )}
         </main>
       </div>
 
@@ -226,8 +278,10 @@ function CalendarApp() {
 
 export default function Index() {
   return (
-    <CalendarLayout>
-      <CalendarApp />
-    </CalendarLayout>
+    <UnhingedProvider>
+      <CalendarLayout>
+        <CalendarApp />
+      </CalendarLayout>
+    </UnhingedProvider>
   );
 }

@@ -2,21 +2,6 @@ import { Link } from "react-router-dom";
 import "@material/web/button/filled-button.js";
 import "@material/web/icon/icon.js";
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      "md-filled-button": React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
-        HTMLElement
-      >;
-      "md-icon": React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
-        HTMLElement
-      >;
-    }
-  }
-}
-
 export default function NotFound() {
   return (
     <div

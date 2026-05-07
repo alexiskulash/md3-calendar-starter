@@ -94,6 +94,7 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
   const weekStart = useMemo(() => startOfWeek(currentDate, weekOpts), [currentDate, weekOpts]);
   const dayList = useMemo(() => {
     if (days === 1) return [currentDate];
+    if (days === 3) return [currentDate, addDays(currentDate, 1), addDays(currentDate, 2)];
     return eachDayOfInterval({ start: weekStart, end: endOfWeek(weekStart, weekOpts) });
   }, [weekStart, currentDate, days, weekOpts]);
 
@@ -143,7 +144,8 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
           style={{
             display: "flex",
             borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
-            paddingRight: isMobile && days > 1 ? 0 : 8,
+            scrollbarGutter: "stable",
+            overflowY: isMobile ? undefined : "scroll",
             flexShrink: 0,
           }}
         >
@@ -201,7 +203,7 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
         </div>
 
         {/* Scrollable time grid */}
-        <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", position: "relative" }}>
+        <div ref={scrollRef} style={{ flex: 1, overflowY: "scroll", position: "relative", scrollbarGutter: "stable" }}>
           <div style={{ display: "flex" }}>
             {/* Time gutter */}
             <div style={{ width: TIME_COL_WIDTH, flexShrink: 0 }}>
