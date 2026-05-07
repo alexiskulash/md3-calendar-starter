@@ -40,9 +40,11 @@
     --md-sys-color-on-surface: 0 0% 12%;
     --md-sys-color-surface-variant: 120 3% 88%;
     --md-sys-color-on-surface-variant: 150 3% 27%;
+    --md-sys-color-surface-container-lowest: 210 33% 100%;
     --md-sys-color-surface-container-low: 210 33% 99%;
     --md-sys-color-surface-container: 213 30% 94%;
     --md-sys-color-surface-container-high: 213 25% 92%;
+    --md-sys-color-surface-container-highest: 213 20% 90%;
 
     /* Background */
     --md-sys-color-background: 0 0% 100%;
@@ -101,6 +103,11 @@
     --md-sys-color-on-surface: 220 5% 90%;
     --md-sys-color-surface-variant: 220 10% 20%;
     --md-sys-color-on-surface-variant: 220 5% 80%;
+    --md-sys-color-surface-container-lowest: 220 15% 8%;
+    --md-sys-color-surface-container-low: 220 15% 13%;
+    --md-sys-color-surface-container: 220 15% 16%;
+    --md-sys-color-surface-container-high: 220 15% 19%;
+    --md-sys-color-surface-container-highest: 220 15% 24%;
 
     --md-sys-color-background: 220 15% 8%;
     --md-sys-color-on-background: 220 5% 90%;
