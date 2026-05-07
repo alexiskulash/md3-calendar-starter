@@ -1,13 +1,25 @@
 import { useState, FormEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { z } from "zod";
 import { useAuth } from "../context/AuthContext";
 import "@material/web/button/filled-button.js";
 import "@material/web/textfield/filled-text-field.js";
+
+const loginSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type ValidationErrors = {
+  email?: string;
+  password?: string;
+};
 
 export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { login } = useAuth();
@@ -18,13 +30,25 @@ export function Login() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!email) {
-      setError("Email is required");
+
+    // Clear previous errors
+    setError("");
+    setFieldErrors({});
+
+    // Validate form
+    const validationResult = loginSchema.safeParse({ email, password });
+    if (!validationResult.success) {
+      const errors: ValidationErrors = {};
+      validationResult.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          errors[err.path[0] as keyof ValidationErrors] = err.message;
+        }
+      });
+      setFieldErrors(errors);
       return;
     }
-    
+
     try {
-      setError("");
       setIsSubmitting(true);
       await login(email, password);
       navigate(from, { replace: true });
@@ -48,18 +72,28 @@ export function Login() {
             label="Email"
             type="email"
             value={email}
-            onInput={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+            onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setEmail(e.target.value);
+              if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: undefined });
+            }}
             disabled={isSubmitting ? true : undefined}
             required
+            error={!!fieldErrors.email ? true : undefined}
+            error-text={fieldErrors.email}
           />
 
           <md-filled-text-field
             label="Password"
             type="password"
             value={password}
-            onInput={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+            onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setPassword(e.target.value);
+              if (fieldErrors.password) setFieldErrors({ ...fieldErrors, password: undefined });
+            }}
             disabled={isSubmitting ? true : undefined}
             required
+            error={!!fieldErrors.password ? true : undefined}
+            error-text={fieldErrors.password}
           />
 
           {error && (
