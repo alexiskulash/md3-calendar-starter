@@ -22,8 +22,10 @@ export interface CalendarContextValue {
   filteredEvents: CalendarEvent[];
   use24h: boolean;
   weekStartsMonday: boolean;
+  darkMode: boolean;
   setUse24h: (v: boolean) => void;
   setWeekStartsMonday: (v: boolean) => void;
+  setDarkMode: (v: boolean) => void;
 }
 
 export const CalendarContext = createContext<CalendarContextValue | null>(null);

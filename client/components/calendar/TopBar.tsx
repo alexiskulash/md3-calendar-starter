@@ -1,5 +1,6 @@
 import "@material/web/icon/icon.js";
 import "@material/web/iconbutton/icon-button.js";
+import "@material/web/switch/switch.js";
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ViewMode } from "../../types/calendar";
@@ -20,7 +21,7 @@ interface TopBarProps {
 
 export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const { selectedDate, viewMode, setViewMode, goNext, goPrev, goToday, search, setSearch,
-    use24h, setUse24h, weekStartsMonday, setWeekStartsMonday } = useCalendar();
+    use24h, setUse24h, weekStartsMonday, setWeekStartsMonday, darkMode, setDarkMode } = useCalendar();
   const isMobile = useIsMobile();
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -302,36 +303,10 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                 <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
                   24-hour time
                 </span>
-                <button
+                <md-switch
+                  selected={use24h ? true : undefined}
                   onClick={() => setUse24h(!use24h)}
-                  style={{
-                    width: 40,
-                    height: 24,
-                    borderRadius: 12,
-                    border: 0,
-                    backgroundColor: use24h
-                      ? "hsl(var(--md-sys-color-primary))"
-                      : "hsl(var(--md-sys-color-outline-variant))",
-                    cursor: "pointer",
-                    position: "relative",
-                    transition: "background-color 0.2s",
-                    flexShrink: 0,
-                  }}
-                >
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: 2,
-                      left: use24h ? 18 : 2,
-                      width: 20,
-                      height: 20,
-                      borderRadius: "50%",
-                      backgroundColor: "#fff",
-                      transition: "left 0.2s",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                    }}
-                  />
-                </button>
+                ></md-switch>
               </div>
 
               {/* Week starts on toggle */}
@@ -341,41 +316,34 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   alignItems: "center",
                   justifyContent: "space-between",
                   padding: "12px 16px",
+                  borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
                 }}
               >
                 <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
                   Week starts Monday
                 </span>
-                <button
+                <md-switch
+                  selected={weekStartsMonday ? true : undefined}
                   onClick={() => setWeekStartsMonday(!weekStartsMonday)}
-                  style={{
-                    width: 40,
-                    height: 24,
-                    borderRadius: 12,
-                    border: 0,
-                    backgroundColor: weekStartsMonday
-                      ? "hsl(var(--md-sys-color-primary))"
-                      : "hsl(var(--md-sys-color-outline-variant))",
-                    cursor: "pointer",
-                    position: "relative",
-                    transition: "background-color 0.2s",
-                    flexShrink: 0,
-                  }}
-                >
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: 2,
-                      left: weekStartsMonday ? 18 : 2,
-                      width: 20,
-                      height: 20,
-                      borderRadius: "50%",
-                      backgroundColor: "#fff",
-                      transition: "left 0.2s",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                    }}
-                  />
-                </button>
+                ></md-switch>
+              </div>
+
+              {/* Dark Mode toggle */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "12px 16px",
+                }}
+              >
+                <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
+                  Dark Mode
+                </span>
+                <md-switch
+                  selected={darkMode ? true : undefined}
+                  onClick={() => setDarkMode(!darkMode)}
+                ></md-switch>
               </div>
             </div>
           )}

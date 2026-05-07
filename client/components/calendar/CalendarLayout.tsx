@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { format, addDays, subDays, addWeeks, subWeeks, addMonths, subMonths } from "date-fns";
 import { Calendar, CalendarEvent, ViewMode } from "../../types/calendar";
 import { CalendarContext } from "./CalendarContext";
@@ -97,6 +97,24 @@ export function CalendarLayout({ children }: CalendarLayoutProps) {
   const [search, setSearch] = useState("");
   const [use24h, setUse24h] = useState(false);
   const [weekStartsMonday, setWeekStartsMonday] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("theme");
+      if (stored) return stored === "dark";
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [darkMode]);
 
   const initialCalOn = useMemo<Record<string, boolean>>(() => {
     const on: Record<string, boolean> = {};
@@ -183,8 +201,10 @@ export function CalendarLayout({ children }: CalendarLayoutProps) {
         getCalendar,
         use24h,
         weekStartsMonday,
+        darkMode,
         setUse24h,
         setWeekStartsMonday,
+        setDarkMode,
       }}
     >
       {children}
