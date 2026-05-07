@@ -2,12 +2,13 @@ import { CalendarEvent } from "../../types/calendar";
 
 interface EventCardProps {
   event: CalendarEvent;
+  color?: "primary" | "secondary" | "tertiary";
   onClick: (event: CalendarEvent) => void;
   compact?: boolean;
 }
 
 const COLOR_STYLES: Record<
-  CalendarEvent["color"],
+  "primary" | "secondary" | "tertiary",
   { bg: string; text: string }
 > = {
   primary: {
@@ -24,8 +25,8 @@ const COLOR_STYLES: Record<
   },
 };
 
-export function EventCard({ event, onClick, compact = false }: EventCardProps) {
-  const colors = COLOR_STYLES[event.color];
+export function EventCard({ event, color = "primary", onClick, compact = false }: EventCardProps) {
+  const colors = COLOR_STYLES[color];
 
   return (
     <div

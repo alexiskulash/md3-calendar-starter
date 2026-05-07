@@ -79,7 +79,7 @@ function layoutDayEvents(events: CalendarEvent[]): LayoutEvent[] {
 // ─── WeekView component ───────────────────────────────────────────────────────
 
 export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }: WeekViewProps) {
-  const { filteredEvents, getCalendar, use24h, weekStartsMonday } = useCalendar();
+  const { events, updateEvent, filteredEvents, getCalendar, use24h, weekStartsMonday } = useCalendar();
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -250,6 +250,51 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       position: "relative",
                       borderLeft: "1px solid hsl(var(--md-sys-color-outline-variant))",
                     }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const eventId = e.dataTransfer.getData("text/plain");
+                      const ev = events.find((e) => e.id === eventId);
+                      if (!ev) return;
+
+                      let offsetY = 0;
+                      try {
+                        const meta = JSON.parse(e.dataTransfer.getData("application/json"));
+                        offsetY = meta.offsetY || 0;
+                      } catch (err) {}
+
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const y = Math.max(0, e.clientY - rect.top - offsetY);
+                      const droppedMinutes = (y / HOUR_HEIGHT) * 60;
+                      const roundedMinutes = Math.floor(droppedMinutes / 15) * 15;
+
+                      const oldDuration = timeToMinutes(ev.endTime) - timeToMinutes(ev.startTime);
+                      let startMinutes = roundedMinutes;
+                      let endMinutes = startMinutes + oldDuration;
+
+                      if (endMinutes >= 1440) {
+                        endMinutes = 1439; // 23:59
+                        startMinutes = Math.max(0, 1439 - oldDuration);
+                      }
+
+                      const startH = Math.floor(startMinutes / 60);
+                      const startM = startMinutes % 60;
+                      const newStartTime = `${String(startH).padStart(2, "0")}:${String(startM).padStart(2, "0")}`;
+
+                      const endH = Math.floor(endMinutes / 60);
+                      const endM = endMinutes % 60;
+                      const newEndTime = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+
+                      updateEvent({
+                        ...ev,
+                        date: dayStr,
+                        startTime: newStartTime,
+                        endTime: newEndTime,
+                      });
+                    }}
                   >
                     {/* Hour rows */}
                     {HOURS.map((h) => (
@@ -287,6 +332,23 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       return (
                         <button
                           key={ev.id}
+                          draggable={true}
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData("text/plain", ev.id);
+
+                            const rect = (e.target as HTMLElement).getBoundingClientRect();
+                            const offsetY = e.clientY - rect.top;
+                            e.dataTransfer.setData("application/json", JSON.stringify({ offsetY }));
+
+                            e.dataTransfer.effectAllowed = "move";
+                            // Optional visual feedback
+                            setTimeout(() => {
+                              (e.target as HTMLElement).style.opacity = "0.5";
+                            }, 0);
+                          }}
+                          onDragEnd={(e) => {
+                            (e.target as HTMLElement).style.opacity = "1";
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             const rect = e.currentTarget.getBoundingClientRect();

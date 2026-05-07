@@ -303,7 +303,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   24-hour time
                 </span>
                 <button
-                  onClick={() => setUse24h((v) => !v)}
+                  onClick={() => setUse24h(!use24h)}
                   style={{
                     width: 40,
                     height: 24,
@@ -347,7 +347,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   Week starts Monday
                 </span>
                 <button
-                  onClick={() => setWeekStartsMonday((v) => !v)}
+                  onClick={() => setWeekStartsMonday(!weekStartsMonday)}
                   style={{
                     width: 40,
                     height: 24,
