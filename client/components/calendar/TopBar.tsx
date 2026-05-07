@@ -5,6 +5,8 @@ import { format } from "date-fns";
 import { ViewMode } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const VIEWS: { id: ViewMode; label: string }[] = [
   { id: "day", label: "Day" },
@@ -28,6 +30,11 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const viewDropdownRef = useRef<HTMLDivElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  const { currentUser, users, switchAccount, signOut } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!viewDropdownOpen) return;
@@ -50,6 +57,17 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [settingsOpen]);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [profileOpen]);
 
   const openSearch = () => {
     setSearchExpanded(true);
@@ -466,26 +484,207 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         )}
       </div>
 
-      {/* Avatar */}
-      <div
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: "50%",
-          backgroundColor: "hsl(var(--md-sys-color-primary))",
-          color: "hsl(var(--md-sys-color-on-primary))",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 13,
-          fontWeight: 600,
-          marginLeft: isMobile ? 2 : 4,
-          flexShrink: 0,
-          cursor: "pointer",
-        }}
-        title="Alex Chen"
-      >
-        AC
+      {/* Avatar / Profile Menu */}
+      <div ref={profileRef} style={{ position: "relative", marginLeft: isMobile ? 2 : 4, flexShrink: 0 }}>
+        <button
+          onClick={() => setProfileOpen(!profileOpen)}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            backgroundColor: currentUser?.color || "hsl(var(--md-sys-color-primary))",
+            color: "#ffffff",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            border: profileOpen ? "2px solid hsl(var(--md-sys-color-primary))" : "none",
+            padding: 0,
+            outline: "none",
+          }}
+          title={currentUser?.name || "Account"}
+        >
+          {currentUser?.initials || "?"}
+        </button>
+
+        {profileOpen && currentUser && (
+          <div
+            style={{
+              position: "absolute",
+              top: "calc(100% + 4px)",
+              right: 0,
+              width: 360,
+              backgroundColor: "hsl(var(--md-sys-color-surface-container-high))",
+              borderRadius: 24,
+              boxShadow: "0 4px 16px rgba(0,0,0,0.16)",
+              zIndex: 200,
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              padding: 16,
+              gap: 16,
+            }}
+          >
+            {/* Section 1: Current User */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: "50%",
+                  backgroundColor: currentUser.color,
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 24,
+                  fontWeight: 400,
+                }}
+              >
+                {currentUser.initials}
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 500, color: "hsl(var(--md-sys-color-on-surface))" }}>
+                  {currentUser.name}
+                </div>
+                <div style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface-variant))" }}>
+                  {currentUser.email}
+                </div>
+              </div>
+              <button
+                style={{
+                  marginTop: 8,
+                  padding: "8px 16px",
+                  borderRadius: 100,
+                  border: "1px solid hsl(var(--md-sys-color-outline-variant))",
+                  backgroundColor: "transparent",
+                  color: "hsl(var(--md-sys-color-primary))",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                }}
+              >
+                Manage your Google Account
+              </button>
+            </div>
+
+            {/* Section 2: Other Accounts */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {users.filter(u => u.id !== currentUser.id).map(user => (
+                <button
+                  key={user.id}
+                  onClick={() => {
+                    switchAccount(user.id);
+                    setProfileOpen(false);
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    border: 0,
+                    backgroundColor: "transparent",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "background-color 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "hsl(var(--md-sys-color-surface-container-highest))";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      backgroundColor: user.color,
+                      color: "#ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 13,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {user.initials}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: "hsl(var(--md-sys-color-on-surface))" }}>
+                      {user.name}
+                    </div>
+                    <div style={{ fontSize: 12, color: "hsl(var(--md-sys-color-on-surface-variant))" }}>
+                      {user.email}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div style={{ height: 1, backgroundColor: "hsl(var(--md-sys-color-outline-variant))", margin: "0 -16px" }} />
+
+            {/* Section 3: Actions */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <button
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  border: 0,
+                  backgroundColor: "transparent",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  color: "hsl(var(--md-sys-color-on-surface))",
+                  fontSize: 14,
+                  fontWeight: 500,
+                }}
+              >
+                <md-icon style={{ fontSize: 20, color: "hsl(var(--md-sys-color-on-surface-variant))" }}>settings</md-icon>
+                Settings
+              </button>
+              <button
+                onClick={() => {
+                  signOut();
+                  navigate("/sign-in");
+                  setProfileOpen(false);
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  border: 0,
+                  backgroundColor: "transparent",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  color: "hsl(var(--md-sys-color-on-surface))",
+                  fontSize: 14,
+                  fontWeight: 500,
+                }}
+              >
+                <md-icon style={{ fontSize: 20, color: "hsl(var(--md-sys-color-on-surface-variant))" }}>logout</md-icon>
+                Sign out
+              </button>
+            </div>
+
+            <div style={{ height: 1, backgroundColor: "hsl(var(--md-sys-color-outline-variant))", margin: "0 -16px" }} />
+
+            {/* Footer */}
+            <div style={{ display: "flex", justifyContent: "center", gap: 16, padding: "8px 0" }}>
+              <a href="#" style={{ fontSize: 12, color: "hsl(var(--md-sys-color-on-surface-variant))", textDecoration: "none" }}>Privacy Policy</a>
+              <span style={{ fontSize: 12, color: "hsl(var(--md-sys-color-outline))" }}>•</span>
+              <a href="#" style={{ fontSize: 12, color: "hsl(var(--md-sys-color-on-surface-variant))", textDecoration: "none" }}>Terms of Service</a>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );
