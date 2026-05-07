@@ -18,4 +18,5 @@ export interface CalendarEvent {
   loc?: string;
   attendees?: number;
   desc?: string;
+  color?: "primary" | "secondary" | "tertiary";
 }

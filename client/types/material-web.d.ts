@@ -222,6 +222,8 @@ declare namespace JSX {
     "md-dialog": React.DetailedHTMLProps<
       React.HTMLAttributes<HTMLElement> & {
         open?: boolean;
+        onClose?: (e: Event) => void;
+        onClosed?: (e: Event) => void;
       },
       HTMLElement
     >;
@@ -340,6 +342,20 @@ declare namespace JSX {
     >;
     "md-menu-item": React.DetailedHTMLProps<
       React.HTMLAttributes<HTMLElement> & {
+        disabled?: boolean;
+      },
+      HTMLElement
+    >;
+
+    // Segmented Button
+    "md-outlined-segmented-button-set": React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement>,
+      HTMLElement
+    >;
+    "md-outlined-segmented-button": React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement> & {
+        label?: string;
+        selected?: boolean;
         disabled?: boolean;
       },
       HTMLElement

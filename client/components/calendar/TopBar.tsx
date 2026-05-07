@@ -1,5 +1,7 @@
 import "@material/web/icon/icon.js";
 import "@material/web/iconbutton/icon-button.js";
+import "@material/web/labs/segmentedbuttonset/outlined-segmented-button-set.js";
+import "@material/web/labs/segmentedbutton/outlined-segmented-button.js";
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ViewMode } from "../../types/calendar";
@@ -385,89 +387,105 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         </div>
       )}
 
-      {/* View switcher — custom dropdown */}
-      <div
-        ref={viewDropdownRef}
-        style={{ position: "relative", marginLeft: isMobile ? 0 : 4, flexShrink: 0 }}
-      >
-        {/* Trigger button */}
-        <button
-          onClick={() => setViewDropdownOpen((v) => !v)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            height: 36,
-            padding: isMobile ? "0 8px 0 10px" : "0 10px 0 14px",
-            borderRadius: 4,
-            border: "1px solid hsl(var(--md-sys-color-outline))",
-            backgroundColor: "transparent",
-            color: "hsl(var(--md-sys-color-on-surface))",
-            fontSize: isMobile ? 13 : 14,
-            fontWeight: 500,
-            cursor: "pointer",
-            fontFamily: "inherit",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {VIEWS.find((v) => v.id === viewMode)?.label ?? "Week"}
-          <span style={{ fontSize: 18, lineHeight: 1, color: "hsl(var(--md-sys-color-on-surface-variant))", marginRight: -2 }}>▾</span>
-        </button>
+      {/* View switcher — segmented buttons */}
+      {!isMobile && (
+        <md-outlined-segmented-button-set style={{ marginLeft: 4, flexShrink: 0 }}>
+          {VIEWS.map((v) => (
+            <md-outlined-segmented-button
+              key={v.id}
+              label={v.label}
+              selected={viewMode === v.id ? true : undefined}
+              onClick={() => setViewMode(v.id)}
+            />
+          ))}
+        </md-outlined-segmented-button-set>
+      )}
 
-        {/* Dropdown menu */}
-        {viewDropdownOpen && (
-          <div
+      {/* Mobile View Switcher - minimal dropdown for space saving */}
+      {isMobile && (
+        <div
+          ref={viewDropdownRef}
+          style={{ position: "relative", marginLeft: 0, flexShrink: 0 }}
+        >
+          {/* Trigger button */}
+          <button
+            onClick={() => setViewDropdownOpen((v) => !v)}
             style={{
-              position: "absolute",
-              top: "calc(100% + 4px)",
-              right: 0,
-              minWidth: 120,
-              backgroundColor: "hsl(var(--md-sys-color-surface-container))",
-              borderRadius: 8,
-              boxShadow: "0 4px 16px rgba(0,0,0,0.16)",
-              zIndex: 200,
-              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              height: 36,
+              padding: "0 8px 0 10px",
+              borderRadius: 4,
+              border: "1px solid hsl(var(--md-sys-color-outline))",
+              backgroundColor: "transparent",
+              color: "hsl(var(--md-sys-color-on-surface))",
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              whiteSpace: "nowrap",
             }}
           >
-            {VIEWS.map((v) => (
-              <button
-                key={v.id}
-                onClick={() => { setViewMode(v.id); setViewDropdownOpen(false); }}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  padding: "10px 16px",
-                  border: 0,
-                  textAlign: "left",
-                  backgroundColor:
-                    viewMode === v.id
-                      ? "hsl(var(--md-sys-color-secondary-container))"
-                      : "transparent",
-                  color:
-                    viewMode === v.id
-                      ? "hsl(var(--md-sys-color-on-secondary-container))"
-                      : "hsl(var(--md-sys-color-on-surface))",
-                  fontSize: 14,
-                  fontWeight: viewMode === v.id ? 600 : 400,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                }}
-                onMouseEnter={(e) => {
-                  if (viewMode !== v.id)
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                      "hsl(var(--md-sys-color-surface-container-high))";
-                }}
-                onMouseLeave={(e) => {
-                  if (viewMode !== v.id)
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
-                }}
-              >
-                {v.label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+            {VIEWS.find((v) => v.id === viewMode)?.label ?? "Week"}
+            <span style={{ fontSize: 18, lineHeight: 1, color: "hsl(var(--md-sys-color-on-surface-variant))", marginRight: -2 }}>▾</span>
+          </button>
+
+          {/* Dropdown menu */}
+          {viewDropdownOpen && (
+            <div
+              style={{
+                position: "absolute",
+                top: "calc(100% + 4px)",
+                right: 0,
+                minWidth: 120,
+                backgroundColor: "hsl(var(--md-sys-color-surface-container))",
+                borderRadius: 8,
+                boxShadow: "0 4px 16px rgba(0,0,0,0.16)",
+                zIndex: 200,
+                overflow: "hidden",
+              }}
+            >
+              {VIEWS.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => { setViewMode(v.id); setViewDropdownOpen(false); }}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    padding: "10px 16px",
+                    border: 0,
+                    textAlign: "left",
+                    backgroundColor:
+                      viewMode === v.id
+                        ? "hsl(var(--md-sys-color-secondary-container))"
+                        : "transparent",
+                    color:
+                      viewMode === v.id
+                        ? "hsl(var(--md-sys-color-on-secondary-container))"
+                        : "hsl(var(--md-sys-color-on-surface))",
+                    fontSize: 14,
+                    fontWeight: viewMode === v.id ? 600 : 400,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (viewMode !== v.id)
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                        "hsl(var(--md-sys-color-surface-container-high))";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (viewMode !== v.id)
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+                  }}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Profile Menu */}
       <ProfileMenu onOpenSettings={() => setSettingsOpen(true)} />
