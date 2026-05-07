@@ -79,6 +79,8 @@ function generateSeedEvents(): CalendarEvent[] {
   ];
 }
 
+import { useAuth } from "../../contexts/AuthContext";
+
 // ─── Provider component ───────────────────────────────────────────────────────
 
 interface CalendarLayoutProps {
@@ -86,6 +88,8 @@ interface CalendarLayoutProps {
 }
 
 export function CalendarLayout({ children }: CalendarLayoutProps) {
+  const { activeAccount } = useAuth();
+
   // "Today" is Apr 28 2026 to match the design data
   const today = useMemo(() => new Date(2026, 3, 28, 10, 24), []);
 
@@ -93,7 +97,17 @@ export function CalendarLayout({ children }: CalendarLayoutProps) {
   const [viewMode, setViewMode] = useState<ViewMode>(() =>
     typeof window !== "undefined" && window.innerWidth < 768 ? "day" : "week"
   );
-  const [events, setEvents] = useState<CalendarEvent[]>(generateSeedEvents);
+
+  // Isolate events by active account
+  const [allEvents, setAllEvents] = useState<Record<string, CalendarEvent[]>>({
+    [activeAccount?.id || ""]: generateSeedEvents()
+  });
+
+  const events = useMemo(() => {
+    if (!activeAccount) return [];
+    return allEvents[activeAccount.id] || [];
+  }, [allEvents, activeAccount]);
+
   const [search, setSearch] = useState("");
   const [use24h, setUse24h] = useState(false);
   const [weekStartsMonday, setWeekStartsMonday] = useState(false);
@@ -148,17 +162,29 @@ export function CalendarLayout({ children }: CalendarLayoutProps) {
   const goToday = useCallback(() => setSelectedDate(today), [today]);
 
   const addEvent = useCallback((event: Omit<CalendarEvent, "id">) => {
+    if (!activeAccount) return;
     const id = `ev-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    setEvents((prev) => [...prev, { ...event, id }]);
-  }, []);
+    setAllEvents((prev) => ({
+      ...prev,
+      [activeAccount.id]: [...(prev[activeAccount.id] || []), { ...event, id }]
+    }));
+  }, [activeAccount]);
 
   const updateEvent = useCallback((updated: CalendarEvent) => {
-    setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
-  }, []);
+    if (!activeAccount) return;
+    setAllEvents((prev) => ({
+      ...prev,
+      [activeAccount.id]: (prev[activeAccount.id] || []).map((e) => (e.id === updated.id ? updated : e))
+    }));
+  }, [activeAccount]);
 
   const deleteEvent = useCallback((id: string) => {
-    setEvents((prev) => prev.filter((e) => e.id !== id));
-  }, []);
+    if (!activeAccount) return;
+    setAllEvents((prev) => ({
+      ...prev,
+      [activeAccount.id]: (prev[activeAccount.id] || []).filter((e) => e.id !== id)
+    }));
+  }, [activeAccount]);
 
   return (
     <CalendarContext.Provider

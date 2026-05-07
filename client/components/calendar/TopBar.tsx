@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { ViewMode } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { useAuth } from "../../contexts/AuthContext";
 
 const VIEWS: { id: ViewMode; label: string }[] = [
   { id: "day", label: "Day" },
@@ -29,6 +30,11 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
+  // Auth state
+  const { activeAccount, accounts, switchAccount, signOut } = useAuth();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!viewDropdownOpen) return;
     const handler = (e: MouseEvent) => {
@@ -50,6 +56,17 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [settingsOpen]);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [profileOpen]);
 
   const openSearch = () => {
     setSearchExpanded(true);
@@ -466,26 +483,216 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         )}
       </div>
 
-      {/* Avatar */}
-      <div
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: "50%",
-          backgroundColor: "hsl(var(--md-sys-color-primary))",
-          color: "hsl(var(--md-sys-color-on-primary))",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 13,
-          fontWeight: 600,
-          marginLeft: isMobile ? 2 : 4,
-          flexShrink: 0,
-          cursor: "pointer",
-        }}
-        title="Alex Chen"
-      >
-        AC
+      {/* Avatar Menu Container */}
+      <div style={{ position: "relative" }} ref={profileRef}>
+        <div
+          onClick={() => setProfileOpen((prev) => !prev)}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            backgroundColor: activeAccount?.color ?? "hsl(var(--md-sys-color-primary))",
+            color: "#fff",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 13,
+            fontWeight: 600,
+            marginLeft: isMobile ? 2 : 4,
+            flexShrink: 0,
+            cursor: "pointer",
+            outline: profileOpen ? "2px solid hsl(var(--md-sys-color-primary))" : "none",
+            outlineOffset: 2,
+          }}
+          title={activeAccount?.name ?? "Account"}
+          aria-label="Account"
+        >
+          {activeAccount?.initials ?? "?"}
+        </div>
+
+        {/* Profile Dropdown Menu */}
+        {profileOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "calc(100% + 12px)",
+              right: 0,
+              width: 360,
+              backgroundColor: "hsl(var(--md-sys-color-surface-container-high))",
+              borderRadius: 20,
+              boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+              zIndex: 200,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            {/* Section 1: Current User */}
+            <div style={{ padding: "20px 16px 16px", textAlign: "center" }}>
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: "50%",
+                  backgroundColor: activeAccount?.color ?? "gray",
+                  color: "#fff",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 24,
+                  fontWeight: 500,
+                  margin: "0 auto 12px",
+                }}
+              >
+                {activeAccount?.initials}
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 500, color: "hsl(var(--md-sys-color-on-surface))" }}>
+                {activeAccount?.name}
+              </div>
+              <div style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface-variant))", marginBottom: 16 }}>
+                {activeAccount?.email}
+              </div>
+              <button
+                style={{
+                  padding: "8px 24px",
+                  borderRadius: 100,
+                  border: "1px solid hsl(var(--md-sys-color-outline))",
+                  backgroundColor: "transparent",
+                  color: "hsl(var(--md-sys-color-primary))",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                Manage your Google Account
+              </button>
+            </div>
+
+            <md-divider></md-divider>
+
+            {/* Section 2: Other Accounts */}
+            {accounts.filter((a) => a.id !== activeAccount?.id).length > 0 && (
+              <div style={{ padding: "8px 0" }}>
+                <div style={{ padding: "8px 16px", fontSize: 12, fontWeight: 500, color: "hsl(var(--md-sys-color-on-surface-variant))" }}>
+                  Other accounts
+                </div>
+                {accounts
+                  .filter((a) => a.id !== activeAccount?.id)
+                  .map((acc) => (
+                    <button
+                      key={acc.id}
+                      onClick={() => {
+                        switchAccount(acc.id);
+                        setProfileOpen(false);
+                      }}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "8px 16px",
+                        border: "none",
+                        backgroundColor: "transparent",
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        textAlign: "left",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "hsl(var(--md-sys-color-surface-container-highest))";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: "50%",
+                          backgroundColor: acc.color,
+                          color: "#fff",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 14,
+                          fontWeight: 500,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {acc.initials}
+                      </div>
+                      <div style={{ flex: 1, overflow: "hidden" }}>
+                        <div style={{ fontSize: 14, fontWeight: 500, color: "hsl(var(--md-sys-color-on-surface))" }}>
+                          {acc.name}
+                        </div>
+                        <div style={{ fontSize: 12, color: "hsl(var(--md-sys-color-on-surface-variant))" }}>
+                          {acc.email}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+              </div>
+            )}
+
+            <md-divider></md-divider>
+
+            {/* Section 3: Actions */}
+            <div style={{ padding: "8px 0" }}>
+              <button
+                onClick={() => { setSettingsOpen(true); setProfileOpen(false); }}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 16,
+                  padding: "10px 16px",
+                  border: "none",
+                  backgroundColor: "transparent",
+                  color: "hsl(var(--md-sys-color-on-surface))",
+                  fontSize: 14,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "hsl(var(--md-sys-color-surface-container-highest))"}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+              >
+                <md-icon style={{ color: "hsl(var(--md-sys-color-on-surface-variant))" }}>settings</md-icon>
+                Settings
+              </button>
+              <button
+                onClick={() => {
+                  setProfileOpen(false);
+                  signOut();
+                }}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 16,
+                  padding: "10px 16px",
+                  border: "none",
+                  backgroundColor: "transparent",
+                  color: "hsl(var(--md-sys-color-on-surface))",
+                  fontSize: 14,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "hsl(var(--md-sys-color-surface-container-highest))"}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+              >
+                <md-icon style={{ color: "hsl(var(--md-sys-color-on-surface-variant))" }}>logout</md-icon>
+                Sign out
+              </button>
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: "12px 16px", display: "flex", justifyContent: "center", gap: 16, backgroundColor: "hsl(var(--md-sys-color-surface-container-low))" }}>
+              <a href="#" style={{ fontSize: 12, color: "hsl(var(--md-sys-color-on-surface-variant))", textDecoration: "none" }} onClick={e => e.preventDefault()}>Privacy Policy</a>
+              <a href="#" style={{ fontSize: 12, color: "hsl(var(--md-sys-color-on-surface-variant))", textDecoration: "none" }} onClick={e => e.preventDefault()}>Terms of Service</a>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );
