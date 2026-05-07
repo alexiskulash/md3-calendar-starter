@@ -3,6 +3,7 @@ import { startOfWeek, endOfWeek, eachDayOfInterval, format, isToday } from "date
 import { CalendarEvent } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { EventCard } from "./EventCard";
 
 interface WeekViewProps {
   currentDate: Date;
@@ -325,8 +326,9 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       const isShort = height < 30;
 
                       return (
-                        <button
+                        <div
                           key={ev.id}
+                          data-event-id={ev.id}
                           draggable
                           onDragStart={(e) => {
                             e.dataTransfer.setData("text/plain", ev.id);
@@ -342,60 +344,30 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                               e.target.style.opacity = "1";
                             }
                           }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            onEventClick(ev, { x: rect.right + 8, y: rect.top });
-                          }}
                           style={{
                             position: "absolute",
                             top: top + 1,
                             height,
                             left: `calc(${leftPct}% + 2px)`,
                             width: `calc(${widthPct}% - 4px)`,
-                            backgroundColor: color,
-                            color: "#fff",
-                            border: 0,
-                            borderRadius: 6,
-                            padding: isShort ? "2px 4px" : "4px 6px",
-                            textAlign: "left",
-                            cursor: "pointer",
-                            overflow: "hidden",
-                            boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.15)",
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 1,
-                            lineHeight: 1.2,
                             zIndex: 1,
-                            fontFamily: "inherit",
                           }}
                         >
-                          <div
-                            style={{
-                              fontSize: isMobile ? 11 : 12,
-                              fontWeight: 600,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
+                          <EventCard
+                            event={ev}
+                            compact={isShort}
+                            onClick={(event) => {
+                              // We use the event's wrapper rect so the popover opens perfectly
+                              const el = document.querySelector(`[data-event-id="${ev.id}"]`);
+                              if (el) {
+                                const rect = el.getBoundingClientRect();
+                                onEventClick(event, { x: rect.right + 8, y: rect.top });
+                              } else {
+                                onEventClick(event, { x: 0, y: 0 }); // fallback
+                              }
                             }}
-                          >
-                            {ev.title}
-                          </div>
-                          {!isShort && (
-                            <div
-                              style={{
-                                fontSize: 11,
-                                opacity: 0.9,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {ev.startTime}
-                              {ev.loc ? ` · ${ev.loc}` : ""}
-                            </div>
-                          )}
-                        </button>
+                          />
+                        </div>
                       );
                     })}
 

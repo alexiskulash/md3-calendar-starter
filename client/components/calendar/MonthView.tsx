@@ -11,6 +11,7 @@ import {
 import { CalendarEvent } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { EventCard } from "./EventCard";
 
 interface MonthViewProps {
   currentDate: Date;
@@ -144,69 +145,27 @@ export function MonthView({ currentDate, onDayClick, onEventClick, onCreateEvent
               </div>
 
               {/* Events */}
-              {visible.map((ev) => {
-                const cal = getCalendar(ev.cal);
-                const color = cal?.color ?? "#0B57D0";
-                return (
-                  <button
-                    key={ev.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      onEventClick(ev, { x: rect.right + 8, y: rect.top });
-                    }}
-                    style={{
-                      border: 0,
-                      padding: isMobile ? "1px 3px" : "2px 6px",
-                      borderRadius: 4,
-                      textAlign: "left",
-                      backgroundColor: "transparent",
-                      color: "hsl(var(--md-sys-color-on-surface))",
-                      fontSize: isMobile ? 11 : 12,
-                      fontWeight: 500,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                      fontFamily: "inherit",
-                      width: "100%",
-                    }}
-                  >
-                    {/* Color dot */}
-                    <span
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        backgroundColor: color,
-                        flexShrink: 0,
-                      }}
-                    />
-                    <span
-                      style={{
-                        color: "hsl(var(--md-sys-color-on-surface-variant))",
-                        marginRight: 2,
-                        fontSize: 11,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {ev.startTime.replace(/^0/, "")}
-                    </span>
-                    <span
-                      style={{
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {ev.title}
-                    </span>
-                  </button>
-                );
-              })}
+              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                {visible.map((ev) => {
+                  return (
+                    <div key={ev.id} data-event-id={ev.id}>
+                      <EventCard
+                        event={ev}
+                        compact={true}
+                        onClick={(event) => {
+                          const el = document.querySelector(`[data-event-id="${ev.id}"]`);
+                          if (el) {
+                            const rect = el.getBoundingClientRect();
+                            onEventClick(event, { x: rect.right + 8, y: rect.top });
+                          } else {
+                            onEventClick(event, { x: 0, y: 0 }); // fallback
+                          }
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
 
               {/* Overflow */}
               {overflow > 0 && (
