@@ -150,30 +150,34 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
             gap: 12,
             padding: "0 20px 0 16px",
             height: 56,
-            backgroundColor: "hsl(var(--md-sys-color-surface-container-low))",
+            backgroundColor: "hsl(var(--md-sys-color-primary))",
             border: "none",
             borderRadius: 16,
             cursor: "pointer",
             width: "100%",
             fontSize: 14,
             fontWeight: 500,
-            color: "hsl(var(--md-sys-color-on-surface))",
+            color: "hsl(var(--md-sys-color-on-primary))",
             boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)",
-            transition: "box-shadow 0.2s",
+            transition: "box-shadow 0.2s, background-color 0.2s",
             fontFamily: "inherit",
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLButtonElement).style.boxShadow =
               "0 4px 8px rgba(0,0,0,0.14), 0 2px 4px rgba(0,0,0,0.1)";
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+              "hsl(var(--md-sys-color-primary))";
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLButtonElement).style.boxShadow =
               "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)";
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+              "hsl(var(--md-sys-color-primary))";
           }}
         >
           <md-icon
             style={{
-              color: "hsl(var(--md-sys-color-primary))",
+              color: "hsl(var(--md-sys-color-on-primary))",
               fontSize: "24px",
             }}
           >
