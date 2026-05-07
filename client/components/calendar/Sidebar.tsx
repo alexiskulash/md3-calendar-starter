@@ -1,5 +1,6 @@
 import "@material/web/icon/icon.js";
 import "@material/web/divider/divider.js";
+import { useState, useRef, useEffect } from "react";
 import { MiniCalendar } from "./MiniCalendar";
 import { useCalendar } from "./CalendarContext";
 import { Calendar } from "../../types/calendar";
@@ -115,6 +116,29 @@ function SidebarSection({
 export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarProps) {
   const { selectedDate, setSelectedDate, calendars, calOn, toggleCal, addEvent } = useCalendar();
   const { showModal } = useUnhinged();
+  const [width, setWidth] = useState(280);
+  const isResizing = useRef(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing.current) return;
+      const newWidth = Math.min(Math.max(e.clientX, 200), 400); // min 200px, max 400px
+      setWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      isResizing.current = false;
+      document.body.style.cursor = 'default';
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
 
   const handleSchrodinger = async () => {
     const isBoss = Math.random() > 0.5;
@@ -135,14 +159,14 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
   return (
     <div
       style={{
-        width: 280,
+        width,
         flexShrink: 0,
         height: "100%",
         display: "flex",
         flexDirection: "column",
         backgroundColor: "hsl(var(--md-sys-color-surface))",
         borderRight: "1px solid hsl(var(--md-sys-color-outline-variant))",
-        overflowY: "auto",
+        position: "relative",
         ...(isOverlay
           ? {
               position: "fixed",
@@ -155,7 +179,8 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
           : {}),
       }}
     >
-      {/* Create button — extended FAB style */}
+      <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+        {/* Create button — extended FAB style */}
       <div style={{ padding: "12px 16px 8px" }}>
         <button
           onClick={onCreateEvent}
@@ -246,6 +271,27 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
         calOn={calOn}
         toggleCal={toggleCal}
       />
+      </div>
+
+      {/* Resize handle */}
+      {!isOverlay && (
+        <div
+          onMouseDown={(e) => {
+            e.preventDefault();
+            isResizing.current = true;
+            document.body.style.cursor = 'col-resize';
+          }}
+          style={{
+            position: "absolute",
+            top: 0,
+            right: -3,
+            width: 6,
+            height: "100%",
+            cursor: "col-resize",
+            zIndex: 10,
+          }}
+        />
+      )}
     </div>
   );
 }
