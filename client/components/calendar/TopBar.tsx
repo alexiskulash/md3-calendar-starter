@@ -255,7 +255,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         <div ref={settingsRef} style={{ position: "relative", flexShrink: 0 }}>
           <md-icon-button
             aria-label="Settings"
-            onClick={() => setSettingsOpen((v) => !v)}
+            onClick={() => setSettingsOpen(!settingsOpen)}
           >
             <md-icon>settings</md-icon>
           </md-icon-button>
@@ -303,7 +303,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   24-hour time
                 </span>
                 <button
-                  onClick={() => setUse24h((v) => !v)}
+                  onClick={() => setUse24h(!use24h)}
                   style={{
                     width: 40,
                     height: 24,
@@ -347,7 +347,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   Week starts Monday
                 </span>
                 <button
-                  onClick={() => setWeekStartsMonday((v) => !v)}
+                  onClick={() => setWeekStartsMonday(!weekStartsMonday)}
                   style={{
                     width: 40,
                     height: 24,
@@ -389,7 +389,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
       >
         {/* Trigger button */}
         <button
-          onClick={() => setViewDropdownOpen((v) => !v)}
+          onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
           style={{
             display: "flex",
             alignItems: "center",

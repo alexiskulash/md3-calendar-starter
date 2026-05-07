@@ -79,7 +79,7 @@ function layoutDayEvents(events: CalendarEvent[]): LayoutEvent[] {
 // ─── WeekView component ───────────────────────────────────────────────────────
 
 export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }: WeekViewProps) {
-  const { filteredEvents, getCalendar, use24h, weekStartsMonday } = useCalendar();
+  const { events, filteredEvents, getCalendar, use24h, weekStartsMonday, updateEvent } = useCalendar();
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -256,6 +256,46 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       <div
                         key={h}
                         onClick={() => onCreateEvent(dayStr, `${String(h).padStart(2, "0")}:00`)}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = "move";
+                          (e.currentTarget as HTMLDivElement).style.backgroundColor =
+                            "hsl(var(--md-sys-color-surface-container) / 0.6)";
+                        }}
+                        onDragLeave={(e) => {
+                          (e.currentTarget as HTMLDivElement).style.backgroundColor = "transparent";
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          (e.currentTarget as HTMLDivElement).style.backgroundColor = "transparent";
+                          const eventId = e.dataTransfer.getData("text/plain");
+                          if (!eventId) return;
+
+                          const evToMove = events.find((evt) => evt.id === eventId);
+                          if (evToMove) {
+                            const startMin = timeToMinutes(evToMove.startTime);
+                            const endMin = timeToMinutes(evToMove.endTime);
+                            const duration = endMin - startMin;
+
+                            const newStartMin = h * 60;
+                            let newEndMin = newStartMin + duration;
+
+                            // Cap end time at 23:59
+                            if (newEndMin >= 24 * 60) {
+                              newEndMin = 24 * 60 - 1;
+                            }
+
+                            const newStartStr = `${String(Math.floor(newStartMin / 60)).padStart(2, '0')}:${String(newStartMin % 60).padStart(2, '0')}`;
+                            const newEndStr = `${String(Math.floor(newEndMin / 60)).padStart(2, '0')}:${String(newEndMin % 60).padStart(2, '0')}`;
+
+                            updateEvent({
+                              ...evToMove,
+                              date: dayStr,
+                              startTime: newStartStr,
+                              endTime: newEndStr,
+                            });
+                          }
+                        }}
                         style={{
                           height: HOUR_HEIGHT,
                           borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant) / 0.5)",
@@ -287,6 +327,21 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       return (
                         <button
                           key={ev.id}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData("text/plain", ev.id);
+                            e.dataTransfer.effectAllowed = "move";
+                            setTimeout(() => {
+                              if (e.target instanceof HTMLElement) {
+                                e.target.style.opacity = "0.5";
+                              }
+                            }, 0);
+                          }}
+                          onDragEnd={(e) => {
+                            if (e.target instanceof HTMLElement) {
+                              e.target.style.opacity = "1";
+                            }
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             const rect = e.currentTarget.getBoundingClientRect();
