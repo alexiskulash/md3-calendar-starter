@@ -161,3 +161,9 @@ md-filled-text-field {
     var(--md-sys-color-on-surface-variant)
   );
 }
+
+md-dialog {
+  --md-dialog-container-color: hsl(var(--md-sys-color-surface-container-high));
+  --md-dialog-headline-color: hsl(var(--md-sys-color-on-surface));
+  --md-dialog-supporting-text-color: hsl(var(--md-sys-color-on-surface-variant));
+}

@@ -79,7 +79,7 @@ function layoutDayEvents(events: CalendarEvent[]): LayoutEvent[] {
 // ─── WeekView component ───────────────────────────────────────────────────────
 
 export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }: WeekViewProps) {
-  const { filteredEvents, getCalendar, use24h, weekStartsMonday } = useCalendar();
+  const { events, updateEvent, filteredEvents, getCalendar, use24h, weekStartsMonday } = useCalendar();
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -244,6 +244,43 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                 return (
                   <div
                     key={dayStr}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const eventId = e.dataTransfer.getData("text/plain");
+                      const event = events.find((ev) => ev.id === eventId);
+                      if (!event) return;
+
+                      const offsetYStr = e.dataTransfer.getData("application/offsetY");
+                      const offsetY = offsetYStr ? parseFloat(offsetYStr) : 0;
+
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const y = e.clientY - rect.top - offsetY;
+                      let dropMinutes = Math.round(((y / HOUR_HEIGHT) * 60) / 15) * 15;
+
+                      const currentStart = timeToMinutes(event.startTime);
+                      const currentEnd = timeToMinutes(event.endTime);
+                      const duration = currentEnd - currentStart;
+
+                      if (dropMinutes + duration > 24 * 60) {
+                        dropMinutes = 24 * 60 - duration;
+                      }
+                      if (dropMinutes < 0) dropMinutes = 0;
+
+                      const newStartStr = `${String(Math.floor(dropMinutes / 60)).padStart(2, "0")}:${String(dropMinutes % 60).padStart(2, "0")}`;
+                      const endMinutes = dropMinutes + duration;
+                      const newEndStr = `${String(Math.floor(endMinutes / 60)).padStart(2, "0")}:${String(endMinutes % 60).padStart(2, "0")}`;
+
+                      updateEvent({
+                        ...event,
+                        date: dayStr,
+                        startTime: newStartStr,
+                        endTime: newEndStr,
+                      });
+                    }}
                     style={{
                       flex: 1,
                       minWidth: isMobile && days > 1 ? MIN_DAY_WIDTH : undefined,
@@ -287,6 +324,13 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       return (
                         <button
                           key={ev.id}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData("text/plain", ev.id);
+                            e.dataTransfer.effectAllowed = "move";
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            e.dataTransfer.setData("application/offsetY", (e.clientY - rect.top).toString());
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             const rect = e.currentTarget.getBoundingClientRect();

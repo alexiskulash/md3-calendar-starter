@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { ViewMode } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { useAuth } from "../../context/AuthContext";
 
 const VIEWS: { id: ViewMode; label: string }[] = [
   { id: "day", label: "Day" },
@@ -28,6 +29,9 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const viewDropdownRef = useRef<HTMLDivElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
+  const { user, logout } = useAuth();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!viewDropdownOpen) return;
@@ -50,6 +54,17 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [settingsOpen]);
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [userMenuOpen]);
 
   const openSearch = () => {
     setSearchExpanded(true);
@@ -303,7 +318,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   24-hour time
                 </span>
                 <button
-                  onClick={() => setUse24h((v) => !v)}
+                  onClick={() => setUse24h(!use24h)}
                   style={{
                     width: 40,
                     height: 24,
@@ -347,7 +362,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   Week starts Monday
                 </span>
                 <button
-                  onClick={() => setWeekStartsMonday((v) => !v)}
+                  onClick={() => setWeekStartsMonday(!weekStartsMonday)}
                   style={{
                     width: 40,
                     height: 24,
@@ -466,26 +481,91 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         )}
       </div>
 
-      {/* Avatar */}
-      <div
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: "50%",
-          backgroundColor: "hsl(var(--md-sys-color-primary))",
-          color: "hsl(var(--md-sys-color-on-primary))",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 13,
-          fontWeight: 600,
-          marginLeft: isMobile ? 2 : 4,
-          flexShrink: 0,
-          cursor: "pointer",
-        }}
-        title="Alex Chen"
-      >
-        AC
+      {/* Avatar with Dropdown */}
+      <div ref={userMenuRef} style={{ position: "relative", marginLeft: isMobile ? 2 : 4, flexShrink: 0 }}>
+        <div
+          onClick={() => setUserMenuOpen((v) => !v)}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            backgroundColor: "hsl(var(--md-sys-color-primary))",
+            color: "hsl(var(--md-sys-color-on-primary))",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+          title={user?.name || "User"}
+        >
+          {user?.avatarInitials || "U"}
+        </div>
+
+        {/* User Menu Dropdown */}
+        {userMenuOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "calc(100% + 4px)",
+              right: 0,
+              minWidth: 200,
+              backgroundColor: "hsl(var(--md-sys-color-surface-container))",
+              borderRadius: 12,
+              boxShadow: "0 4px 16px rgba(0,0,0,0.16)",
+              zIndex: 200,
+              overflow: "hidden",
+            }}
+          >
+            {/* User Info Header */}
+            <div
+              style={{
+                padding: "16px",
+                borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
+              }}
+            >
+              <div style={{ fontWeight: 600, color: "hsl(var(--md-sys-color-on-surface))", fontSize: 14 }}>
+                {user?.name}
+              </div>
+              <div style={{ color: "hsl(var(--md-sys-color-on-surface-variant))", fontSize: 12, marginTop: 2 }}>
+                {user?.email}
+              </div>
+            </div>
+
+            {/* Logout Action */}
+            <button
+              onClick={() => {
+                logout();
+                setUserMenuOpen(false);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                width: "100%",
+                padding: "12px 16px",
+                border: 0,
+                textAlign: "left",
+                backgroundColor: "transparent",
+                color: "hsl(var(--md-sys-color-error))",
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                  "hsl(var(--md-sys-color-surface-container-high))";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+              }}
+            >
+              <md-icon style={{ fontSize: 18, marginRight: 12 }}>logout</md-icon>
+              Sign out
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );
