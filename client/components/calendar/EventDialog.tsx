@@ -110,7 +110,7 @@ export function EventDialog({
     <md-dialog ref={dialogRef}>
       <div slot="headline" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
         {isEditing ? "Edit Event" : "New Event"}
-        <md-icon-button onClick={onClose} aria-label="Close" type="button">
+        <md-icon-button onClick={onClose} aria-label="Close">
           <md-icon>close</md-icon>
         </md-icon-button>
       </div>
@@ -126,7 +126,8 @@ export function EventDialog({
 
         <md-filled-text-field
           label="Date"
-          type="date"
+          type="text"
+          placeholder="YYYY-MM-DD"
           value={date}
           onInput={(e: any) => setDate(e.target.value)}
         ></md-filled-text-field>
@@ -134,14 +135,16 @@ export function EventDialog({
         <div style={{ display: "flex", gap: "12px" }}>
           <md-filled-text-field
             label="Start time"
-            type="time"
+            type="text"
+            placeholder="HH:MM"
             value={startTime}
             onInput={(e: any) => setStartTime(e.target.value)}
             style={{ flex: 1 }}
           ></md-filled-text-field>
           <md-filled-text-field
             label="End time"
-            type="time"
+            type="text"
+            placeholder="HH:MM"
             value={endTime}
             onInput={(e: any) => setEndTime(e.target.value)}
             style={{ flex: 1 }}
