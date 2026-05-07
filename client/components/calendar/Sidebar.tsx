@@ -140,49 +140,6 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
           : {}),
       }}
     >
-      {/* Create button — extended FAB style */}
-      <div style={{ padding: "12px 16px 8px" }}>
-        <button
-          onClick={onCreateEvent}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "0 20px 0 16px",
-            height: 56,
-            backgroundColor: "hsl(var(--md-sys-color-surface-container-low))",
-            border: "none",
-            borderRadius: 16,
-            cursor: "pointer",
-            width: "100%",
-            fontSize: 14,
-            fontWeight: 500,
-            color: "hsl(var(--md-sys-color-on-surface))",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)",
-            transition: "box-shadow 0.2s",
-            fontFamily: "inherit",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.boxShadow =
-              "0 4px 8px rgba(0,0,0,0.14), 0 2px 4px rgba(0,0,0,0.1)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.boxShadow =
-              "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)";
-          }}
-        >
-          <md-icon
-            style={{
-              color: "hsl(var(--md-sys-color-primary))",
-              fontSize: "24px",
-            }}
-          >
-            add
-          </md-icon>
-          Create
-        </button>
-      </div>
-
       {/* Mini calendar */}
       <MiniCalendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
 

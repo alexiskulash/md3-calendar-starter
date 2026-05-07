@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import "@material/web/icon/icon.js";
 import "@material/web/iconbutton/icon-button.js";
 import "@material/web/divider/divider.js";
+import "@material/web/fab/fab.js";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 import { CalendarLayout } from "../components/calendar/CalendarLayout";
@@ -191,9 +192,28 @@ function CalendarApp() {
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
+            position: "relative",
           }}
         >
           {renderView()}
+
+          {/* Floating Action Button */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: isMobile ? 16 : 32,
+              right: isMobile ? 16 : 32,
+              zIndex: 90,
+            }}
+          >
+            <md-fab
+              variant="primary"
+              aria-label="Create new event"
+              onClick={() => openCreateDialog()}
+            >
+              <md-icon slot="icon">add</md-icon>
+            </md-fab>
+          </div>
         </main>
       </div>
 
