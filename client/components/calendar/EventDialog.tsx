@@ -322,6 +322,10 @@ export function EventDialog({
                 fontWeight: 500,
                 cursor: "pointer",
                 fontFamily: "inherit",
+                width: "100%",
+                height: "auto",
+                flexGrow: 0,
+                maxWidth: 500,
               }}
             >
               Cancel
