@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { ViewMode } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { ProfileMenu } from "../auth/ProfileMenu";
 
 const VIEWS: { id: ViewMode; label: string }[] = [
   { id: "day", label: "Day" },
@@ -303,7 +304,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   24-hour time
                 </span>
                 <button
-                  onClick={() => setUse24h((v) => !v)}
+                  onClick={() => setUse24h(!use24h)}
                   style={{
                     width: 40,
                     height: 24,
@@ -347,7 +348,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   Week starts Monday
                 </span>
                 <button
-                  onClick={() => setWeekStartsMonday((v) => !v)}
+                  onClick={() => setWeekStartsMonday(!weekStartsMonday)}
                   style={{
                     width: 40,
                     height: 24,
@@ -466,27 +467,8 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         )}
       </div>
 
-      {/* Avatar */}
-      <div
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: "50%",
-          backgroundColor: "hsl(var(--md-sys-color-primary))",
-          color: "hsl(var(--md-sys-color-on-primary))",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 13,
-          fontWeight: 600,
-          marginLeft: isMobile ? 2 : 4,
-          flexShrink: 0,
-          cursor: "pointer",
-        }}
-        title="Alex Chen"
-      >
-        AC
-      </div>
+      {/* Avatar Menu */}
+      <ProfileMenu />
     </header>
   );
 }

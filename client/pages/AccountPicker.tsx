@@ -1,33 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import "@material/web/icon/icon.js";
 
-interface Account {
-  id: string;
-  name: string;
-  email: string;
-  initials: string;
-  color: string;
-}
-
-const ACCOUNTS: Account[] = [
-  {
-    id: "1",
-    name: "Alex Chen",
-    email: "alex@example.com",
-    initials: "AC",
-    color: "hsl(var(--md-sys-color-primary))",
-  },
-  {
-    id: "2",
-    name: "Work Account",
-    email: "alex.work@company.com",
-    initials: "W",
-    color: "#006A6A", // Material Teal
-  },
-];
+import { useAuth } from "../components/auth/AuthContext";
 
 export default function AccountPicker() {
   const navigate = useNavigate();
+  const { accounts, switchAccount } = useAuth();
 
   return (
     <div
@@ -123,10 +101,13 @@ export default function AccountPicker() {
 
         {/* Account List */}
         <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
-          {ACCOUNTS.map((account) => (
+          {accounts.map((account) => (
             <button
               key={account.id}
-              onClick={() => navigate("/")}
+              onClick={() => {
+                switchAccount(account.id);
+                navigate("/");
+              }}
               style={{
                 display: "flex",
                 alignItems: "center",

@@ -7,7 +7,7 @@ interface EventCardProps {
 }
 
 const COLOR_STYLES: Record<
-  CalendarEvent["color"],
+  NonNullable<CalendarEvent["color"]>,
   { bg: string; text: string }
 > = {
   primary: {
@@ -25,7 +25,7 @@ const COLOR_STYLES: Record<
 };
 
 export function EventCard({ event, onClick, compact = false }: EventCardProps) {
-  const colors = COLOR_STYLES[event.color];
+  const colors = COLOR_STYLES[event.color || "primary"];
 
   return (
     <div
