@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { ViewMode } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { AccountDropdown } from "../auth/AccountDropdown";
 
 const VIEWS: { id: ViewMode; label: string }[] = [
   { id: "day", label: "Day" },
@@ -385,7 +386,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
       {/* View switcher — custom dropdown */}
       <div
         ref={viewDropdownRef}
-        style={{ position: "relative", marginLeft: isMobile ? 0 : 4, flexShrink: 0 }}
+        style={{ position: "relative", marginLeft: isMobile ? 0 : 4, marginRight: 8, flexShrink: 0 }}
       >
         {/* Trigger button */}
         <button
@@ -466,27 +467,8 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         )}
       </div>
 
-      {/* Avatar */}
-      <div
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: "50%",
-          backgroundColor: "hsl(var(--md-sys-color-primary))",
-          color: "hsl(var(--md-sys-color-on-primary))",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 13,
-          fontWeight: 600,
-          marginLeft: isMobile ? 2 : 4,
-          flexShrink: 0,
-          cursor: "pointer",
-        }}
-        title="Alex Chen"
-      >
-        AC
-      </div>
+      {/* Account Dropdown */}
+      <AccountDropdown />
     </header>
   );
 }
