@@ -18,5 +18,6 @@ export interface CalendarEvent {
   loc?: string;
   attendees?: number;
   desc?: string;
+  timezone?: string;
   color?: "primary" | "secondary" | "tertiary";
 }

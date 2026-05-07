@@ -33,8 +33,11 @@ export function EventDialog({
   const [date, setDate] = useState(today);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
+  const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [desc, setDesc] = useState("");
   const [cal, setCal] = useState(calendars[0]?.id ?? "me");
+
+  const TIMEZONES = (Intl as any).supportedValuesOf ? (Intl as any).supportedValuesOf("timeZone") as string[] : [Intl.DateTimeFormat().resolvedOptions().timeZone];
 
   useEffect(() => {
     if (open) {
@@ -43,6 +46,7 @@ export function EventDialog({
         setDate(event.date);
         setStartTime(event.startTime);
         setEndTime(event.endTime);
+        setTimezone(event.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
         setDesc(event.desc ?? "");
         setCal(event.cal);
       } else {
@@ -53,6 +57,7 @@ export function EventDialog({
         setEndTime(
           `${String(Math.min(h + 1, 23)).padStart(2, "0")}:${String(m).padStart(2, "0")}`
         );
+        setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
         setDesc("");
         setCal(calendars.find((c) => c.kind === "mine")?.id ?? "me");
       }
@@ -69,7 +74,7 @@ export function EventDialog({
 
   const handleSave = () => {
     if (!title.trim()) return;
-    onSave({ id: event?.id, title: title.trim(), date, startTime, endTime, cal, desc: desc.trim() });
+    onSave({ id: event?.id, title: title.trim(), date, startTime, endTime, timezone, cal, desc: desc.trim() });
     onClose();
   };
 
@@ -235,6 +240,23 @@ export function EventDialog({
                 style={fieldStyle}
               />
             </div>
+          </div>
+
+          {/* Timezone */}
+          <div>
+            <label style={labelStyle}>Time zone</label>
+            <input
+              list="timezones-list"
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              placeholder="Select time zone"
+              style={fieldStyle}
+            />
+            <datalist id="timezones-list">
+              {TIMEZONES.map((tz) => (
+                <option key={tz} value={tz} />
+              ))}
+            </datalist>
           </div>
 
           {/* Details */}
