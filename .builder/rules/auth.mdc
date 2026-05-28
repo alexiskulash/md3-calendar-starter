@@ -1,0 +1,50 @@
+---
+description: Auth feature - sign-in screen, account context, and profile menu
+globs:
+alwaysApply: false
+---
+
+## Auth System
+
+Session is in-memory React state only — resets on page refresh (no localStorage).
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `client/contexts/AuthContext.tsx` | `Account` type, pre-seeded accounts, `AuthProvider`, `useAuth()` |
+| `client/components/auth/SignInScreen.tsx` | Full-page account picker shown when `activeAccount === null` |
+| `client/components/auth/ProfileMenu.tsx` | Dropdown from avatar: current user, other accounts, settings, sign out |
+| `client/components/auth/SettingsPanel.tsx` | Settings panel (24h / week start) extracted from TopBar |
+
+### AuthContext API
+
+
+interface Account {
+  id: string;
+  name: string;
+  email: string;
+  initials: string;
+  color: string;  // hex, unique per account
+}
+
+const { activeAccount, accounts, signIn, signOut, switchAccount } = useAuth();
+```
+
+Pre-seeded accounts: `alex-personal` (gmail) and `alex-work` (acme.co).
+
+### App Shell Gate
+
+`client/App.tsx` wraps everything in `<AuthProvider>`. `AppShell` reads `activeAccount` — renders `<SignInScreen>` when null, otherwise the normal routes.
+
+### TopBar Integration
+
+Avatar button is in the rightmost slot of TopBar, inside a relative-positioned `avatarAreaRef` div. It opens `<ProfileMenu>` or `<SettingsPanel>` as absolute dropdowns within that container.
+
+- ProfileMenu handles its own click-outside via `useEffect + mousedown`
+- SettingsPanel click-outside is handled in TopBar via `avatarAreaRef`
+- Avatar shows active account's `initials` and `color`; has `aria-label="Account"` and a 2px primary border ring when open
+
+### Events & Preferences
+
+Calendar events and preferences are **shared across accounts** (no per-account isolation). Switching accounts only changes which initials/color appear in the avatar.

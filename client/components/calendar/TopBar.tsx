@@ -5,6 +5,9 @@ import "@material/web/tabs/primary-tab.js";
 import { useEffect, useRef, useState } from "react";
 import { ViewMode } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { ProfileMenu } from "../auth/ProfileMenu";
+import { SettingsPanel } from "../auth/SettingsPanel";
 import { useIsMobile } from "../../hooks/useIsMobile";
 
 const VIEWS: { id: ViewMode; label: string }[] = [
@@ -29,17 +32,27 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
     goToday,
     search,
     setSearch,
-    use24h,
-    setUse24h,
-    weekStartsMonday,
-    setWeekStartsMonday,
   } = useCalendar();
+  const { activeAccount } = useAuth();
   const isMobile = useIsMobile();
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const tabsRef = useRef<HTMLElement>(null);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const settingsRef = useRef<HTMLDivElement>(null);
+  const avatarAreaRef = useRef<HTMLDivElement>(null);
+
+  // Close settings panel on outside click
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (avatarAreaRef.current && !avatarAreaRef.current.contains(e.target as Node)) {
+        setSettingsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [settingsOpen]);
 
   // Sync tab change events → viewMode
   useEffect(() => {
@@ -54,17 +67,6 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
     el.addEventListener("change", handler);
     return () => el.removeEventListener("change", handler);
   }, [setViewMode]);
-
-  useEffect(() => {
-    if (!settingsOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
-        setSettingsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [settingsOpen]);
 
   const openSearch = () => {
     setSearchExpanded(true);
@@ -265,155 +267,49 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
           </div>
         )}
 
-        {/* Settings — hidden on mobile */}
-        {!isMobile && (
-          <div ref={settingsRef} style={{ position: "relative", flexShrink: 0 }}>
-            <md-icon-button
-              aria-label="Settings"
-              onClick={() => setSettingsOpen((v) => !v)}
-            >
-              <md-icon>settings</md-icon>
-            </md-icon-button>
+        {/* Avatar + menus */}
+        <div ref={avatarAreaRef} style={{ position: "relative", flexShrink: 0 }}>
+          <button
+            aria-label="Account"
+            onClick={() => {
+              setProfileMenuOpen((v) => !v);
+              setSettingsOpen(false);
+            }}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              backgroundColor: activeAccount?.color ?? "hsl(var(--md-sys-color-primary))",
+              color: "#fff",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 13,
+              fontWeight: 600,
+              marginLeft: isMobile ? 2 : 4,
+              flexShrink: 0,
+              cursor: "pointer",
+              border: profileMenuOpen
+                ? "2px solid hsl(var(--md-sys-color-primary))"
+                : "2px solid transparent",
+              outline: "none",
+              fontFamily: "inherit",
+              transition: "border-color 0.15s",
+            }}
+          >
+            {activeAccount?.initials ?? "?"}
+          </button>
 
-            {settingsOpen && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "calc(100% + 4px)",
-                  right: 0,
-                  width: 240,
-                  backgroundColor: "hsl(var(--md-sys-color-surface-container))",
-                  borderRadius: 12,
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.16)",
-                  zIndex: 200,
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    padding: "12px 16px 8px",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "hsl(var(--md-sys-color-on-surface-variant))",
-                    letterSpacing: "0.4px",
-                    textTransform: "uppercase",
-                    borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
-                  }}
-                >
-                  Settings
-                </div>
+          {profileMenuOpen && (
+            <ProfileMenu
+              onClose={() => setProfileMenuOpen(false)}
+              onOpenSettings={() => setSettingsOpen(true)}
+            />
+          )}
 
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "12px 16px",
-                    borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
-                  }}
-                >
-                  <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
-                    24-hour time
-                  </span>
-                  <button
-                    onClick={() => setUse24h((v) => !v)}
-                    style={{
-                      width: 40,
-                      height: 24,
-                      borderRadius: 12,
-                      border: 0,
-                      backgroundColor: use24h
-                        ? "hsl(var(--md-sys-color-primary))"
-                        : "hsl(var(--md-sys-color-outline-variant))",
-                      cursor: "pointer",
-                      position: "relative",
-                      transition: "background-color 0.2s",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <span
-                      style={{
-                        position: "absolute",
-                        top: 2,
-                        left: use24h ? 18 : 2,
-                        width: 20,
-                        height: 20,
-                        borderRadius: "50%",
-                        backgroundColor: "#fff",
-                        transition: "left 0.2s",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                      }}
-                    />
-                  </button>
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "12px 16px",
-                  }}
-                >
-                  <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
-                    Week starts Monday
-                  </span>
-                  <button
-                    onClick={() => setWeekStartsMonday((v) => !v)}
-                    style={{
-                      width: 40,
-                      height: 24,
-                      borderRadius: 12,
-                      border: 0,
-                      backgroundColor: weekStartsMonday
-                        ? "hsl(var(--md-sys-color-primary))"
-                        : "hsl(var(--md-sys-color-outline-variant))",
-                      cursor: "pointer",
-                      position: "relative",
-                      transition: "background-color 0.2s",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <span
-                      style={{
-                        position: "absolute",
-                        top: 2,
-                        left: weekStartsMonday ? 18 : 2,
-                        width: 20,
-                        height: 20,
-                        borderRadius: "50%",
-                        backgroundColor: "#fff",
-                        transition: "left 0.2s",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                      }}
-                    />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Avatar */}
-        <div
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            backgroundColor: "hsl(var(--md-sys-color-primary))",
-            color: "hsl(var(--md-sys-color-on-primary))",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 13,
-            fontWeight: 600,
-            marginLeft: isMobile ? 2 : 4,
-            flexShrink: 0,
-            cursor: "pointer",
-          }}
-          title="Alex Chen"
-        >
-          AC
+          {settingsOpen && (
+            <SettingsPanel onClose={() => setSettingsOpen(false)} />
+          )}
         </div>
       </header>
 
