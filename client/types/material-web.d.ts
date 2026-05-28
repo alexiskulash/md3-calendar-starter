@@ -269,6 +269,14 @@ declare namespace JSX {
       HTMLElement
     >;
 
+    // Chip set
+    "md-chip-set": React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement> & {
+        "aria-label"?: string;
+      },
+      HTMLElement
+    >;
+
     // Chips
     "md-assist-chip": React.DetailedHTMLProps<
       React.HTMLAttributes<HTMLElement> & {

@@ -1,5 +1,7 @@
 import "@material/web/icon/icon.js";
 import "@material/web/divider/divider.js";
+import "@material/web/chips/chip-set.js";
+import "@material/web/chips/filter-chip.js";
 import { MiniCalendar } from "./MiniCalendar";
 import { useCalendar } from "./CalendarContext";
 import { Calendar } from "../../types/calendar";
@@ -10,71 +12,7 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-function CalendarRow({ cal, on, onToggle }: { cal: Calendar; on: boolean; onToggle: () => void }) {
-  return (
-    <div
-      onClick={onToggle}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        padding: "6px 16px",
-        cursor: "pointer",
-        borderRadius: 4,
-        transition: "background-color 0.15s",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.backgroundColor =
-          "hsl(var(--md-sys-color-surface-container))";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.backgroundColor = "transparent";
-      }}
-    >
-      {/* Custom colored checkbox */}
-      <span
-        style={{
-          width: 18,
-          height: 18,
-          borderRadius: 3,
-          border: `2px solid ${cal.color}`,
-          backgroundColor: on ? cal.color : "transparent",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          transition: "background-color 0.15s",
-        }}
-      >
-        {on && (
-          <md-icon
-            style={{
-              fontSize: "14px",
-              color: "#fff",
-              fontVariationSettings: "'FILL' 1, 'wght' 700",
-            }}
-          >
-            check
-          </md-icon>
-        )}
-      </span>
-      <span
-        style={{
-          fontSize: 14,
-          color: "hsl(var(--md-sys-color-on-surface))",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          flex: 1,
-        }}
-      >
-        {cal.name}
-      </span>
-    </div>
-  );
-}
-
-function SidebarSection({
+function CalendarChips({
   label,
   calendars,
   calOn,
@@ -94,19 +32,45 @@ function SidebarSection({
           color: "hsl(var(--md-sys-color-on-surface-variant))",
           letterSpacing: "0.8px",
           textTransform: "uppercase",
-          padding: "8px 16px 4px",
+          padding: "8px 16px 2px",
         }}
       >
         {label}
       </div>
-      {calendars.map((cal) => (
-        <CalendarRow
-          key={cal.id}
-          cal={cal}
-          on={calOn[cal.id] ?? true}
-          onToggle={() => toggleCal(cal.id)}
-        />
-      ))}
+      <md-chip-set
+        aria-label={label}
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          padding: "4px 12px 6px",
+          gap: 0,
+        } as React.CSSProperties}
+      >
+        {calendars.map((cal) => {
+          const isOn = calOn[cal.id] ?? true;
+          return (
+            <md-filter-chip
+              key={cal.id}
+              selected={isOn ? true : undefined}
+              onClick={() => toggleCal(cal.id)}
+              style={{ margin: "3px 3px" }}
+            >
+              {/* Color dot shown when chip is not selected */}
+              <div
+                slot="icon"
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  backgroundColor: cal.color,
+                  flexShrink: 0,
+                }}
+              />
+              {cal.name}
+            </md-filter-chip>
+          );
+        })}
+      </md-chip-set>
     </div>
   );
 }
@@ -189,7 +153,7 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
       <md-divider style={{ margin: "8px 0" }} />
 
       {/* My Calendars */}
-      <SidebarSection
+      <CalendarChips
         label="My calendars"
         calendars={mine}
         calOn={calOn}
@@ -199,7 +163,7 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
       <md-divider style={{ margin: "8px 0" }} />
 
       {/* Other Calendars */}
-      <SidebarSection
+      <CalendarChips
         label="Other calendars"
         calendars={other}
         calOn={calOn}
