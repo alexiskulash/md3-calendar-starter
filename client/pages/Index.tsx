@@ -198,10 +198,10 @@ function CalendarApp() {
         </main>
       </div>
 
-      {/* Bottom navigation bar — mobile only */}
-      {isMobile && (
+      {/* Bottom navigation bar — hidden on desktop via CSS, not JS */}
+      <div className="md:hidden">
         <MobileNavBar viewMode={viewMode} onViewChange={setViewMode} />
-      )}
+      </div>
 
       {/* Event create/edit dialog */}
       <EventDialog
