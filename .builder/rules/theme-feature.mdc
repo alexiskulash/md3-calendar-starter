@@ -1,0 +1,35 @@
+---
+description: Dark mode / theme system
+globs:
+alwaysApply: false
+---
+
+# Theme Feature
+
+## Architecture
+
+Dark mode is implemented via a React context in `client/components/theme/ThemeContext.tsx`.
+
+- **Provider**: `ThemeProvider` — wrap at the root of `App.tsx` (outside `AuthProvider`)
+- **Hook**: `useTheme()` — returns `{ isDark: boolean, toggleDark: () => void }`
+
+## Initialization order (on mount)
+
+1. Check `localStorage.getItem("theme")` — `"dark"` or `"light"` wins
+2. Fall back to `window.matchMedia("(prefers-color-scheme: dark)").matches`
+
+## Persistence
+
+User choice is stored in `localStorage` under the key `"theme"` (values: `"dark"` | `"light"`).
+
+## DOM mechanism
+
+When `isDark` changes, the effect adds or removes the `.dark` class on `document.documentElement`. Tailwind's `darkMode: ["class"]` config picks this up automatically.
+
+## CSS tokens
+
+Light tokens live in `:root`, dark overrides live in `.dark` — both in `client/global.css`. The `.dark` block includes surface-container variants (`-low`, default, `-high`) so dropdowns and panels render correctly in dark mode.
+
+## Toggle UI
+
+The dark mode toggle is the first row inside the Settings dropdown in `client/components/calendar/TopBar.tsx`, using the same pill-button pattern as the 24-hour time and week-start toggles.

@@ -6,6 +6,7 @@ import { ViewMode } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { useAuth } from "../auth/AuthContext";
+import { useTheme } from "../theme/ThemeContext";
 import { ProfileMenu } from "../auth/ProfileMenu";
 
 const VIEWS: { id: ViewMode; label: string }[] = [
@@ -24,6 +25,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const { selectedDate, viewMode, setViewMode, goNext, goPrev, goToday, search, setSearch,
     use24h, setUse24h, weekStartsMonday, setWeekStartsMonday } = useCalendar();
   const { activeAccount } = useAuth();
+  const { isDark, toggleDark } = useTheme();
   const isMobile = useIsMobile();
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -292,6 +294,51 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                 }}
               >
                 Settings
+              </div>
+
+              {/* Dark mode toggle */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "12px 16px",
+                  borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
+                }}
+              >
+                <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
+                  Dark mode
+                </span>
+                <button
+                  onClick={toggleDark}
+                  style={{
+                    width: 40,
+                    height: 24,
+                    borderRadius: 12,
+                    border: 0,
+                    backgroundColor: isDark
+                      ? "hsl(var(--md-sys-color-primary))"
+                      : "hsl(var(--md-sys-color-outline-variant))",
+                    cursor: "pointer",
+                    position: "relative",
+                    transition: "background-color 0.2s",
+                    flexShrink: 0,
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 2,
+                      left: isDark ? 18 : 2,
+                      width: 20,
+                      height: 20,
+                      borderRadius: "50%",
+                      backgroundColor: "#fff",
+                      transition: "left 0.2s",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                    }}
+                  />
+                </button>
               </div>
 
               {/* Time format toggle */}
