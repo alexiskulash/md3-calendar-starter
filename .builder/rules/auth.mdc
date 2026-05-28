@@ -1,0 +1,49 @@
+---
+description: Auth feature — sign-in screen, profile menu, account context
+globs:
+alwaysApply: false
+---
+
+## Auth Architecture
+
+Auth state is managed in `client/context/AuthContext.tsx` via `AuthProvider` + `useAuth()` hook.
+
+### Account type
+
+interface Account {
+  id: string;
+  name: string;
+  email: string;
+  initials: string;
+  color: string; // unique hex per account
+}
+```
+
+### Seeded accounts (3)
+- Alex Chen / alex.chen@gmail.com — #0B57D0
+- Alex Chen / alex@designco.com — #1E8E3E
+- Jamie Park / jamie.park@gmail.com — #8430CE
+
+### Key behaviors
+- `currentUser` starts as `null` → `SignInScreen` is shown instead of the calendar
+- Session is React state only — resets on page refresh (by design, PRD F-17)
+- All calendar data is shared across accounts (per-account isolation is out of scope, PRD §6)
+
+### Component locations
+- `client/context/AuthContext.tsx` — context, provider, hook, seeded accounts
+- `client/components/auth/SignInScreen.tsx` — full-page account picker (PRD §4.1)
+- `client/components/auth/ProfileMenu.tsx` — top-right dropdown (PRD §4.2)
+- `client/components/calendar/TopBar.tsx` — avatar button that opens ProfileMenu
+
+### Data flow
+```
+AuthProvider (Index.tsx → AuthGate)
+  └── currentUser
+       ├── null → <SignInScreen />
+       └── Account → <CalendarLayout><CalendarApp /></CalendarLayout>
+            └── TopBar uses useAuth() for avatar + ProfileMenu
+                 └── ProfileMenu uses useAuth() for other accounts + signOut
+```
+
+### Adding new accounts
+Add entries to the `SEEDED_ACCOUNTS` array in `AuthContext.tsx`. Each must have a unique `id` and `color`.

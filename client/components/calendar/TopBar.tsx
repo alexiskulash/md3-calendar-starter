@@ -5,6 +5,8 @@ import { format } from "date-fns";
 import { ViewMode } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { useAuth } from "../../context/AuthContext";
+import { ProfileMenu } from "../auth/ProfileMenu";
 
 const VIEWS: { id: ViewMode; label: string }[] = [
   { id: "day", label: "Day" },
@@ -21,6 +23,7 @@ interface TopBarProps {
 export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const { selectedDate, viewMode, setViewMode, goNext, goPrev, goToday, search, setSearch,
     use24h, setUse24h, weekStartsMonday, setWeekStartsMonday } = useCalendar();
+  const { currentUser } = useAuth();
   const isMobile = useIsMobile();
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -28,6 +31,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const viewDropdownRef = useRef<HTMLDivElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!viewDropdownOpen) return;
@@ -467,26 +471,42 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
       </div>
 
       {/* Avatar */}
-      <div
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: "50%",
-          backgroundColor: "hsl(var(--md-sys-color-primary))",
-          color: "hsl(var(--md-sys-color-on-primary))",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 13,
-          fontWeight: 600,
-          marginLeft: isMobile ? 2 : 4,
-          flexShrink: 0,
-          cursor: "pointer",
-        }}
-        title="Alex Chen"
-      >
-        AC
-      </div>
+      {currentUser && (
+        <>
+          <button
+            aria-label="Account"
+            onClick={() => setProfileMenuOpen((v) => !v)}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              backgroundColor: currentUser.color,
+              color: "#fff",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 13,
+              fontWeight: 600,
+              marginLeft: isMobile ? 2 : 4,
+              flexShrink: 0,
+              cursor: "pointer",
+              border: profileMenuOpen
+                ? "2px solid hsl(var(--md-sys-color-primary))"
+                : "2px solid transparent",
+              padding: 0,
+              outline: "none",
+              fontFamily: "inherit",
+            }}
+            title={currentUser.name}
+          >
+            {currentUser.initials}
+          </button>
+
+          {profileMenuOpen && (
+            <ProfileMenu onClose={() => setProfileMenuOpen(false)} />
+          )}
+        </>
+      )}
     </header>
   );
 }
