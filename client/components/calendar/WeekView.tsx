@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, isToday } from "date-fns";
 import { CalendarEvent } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
@@ -18,11 +18,26 @@ function timeToMinutes(time: string): number {
   return h * 60 + m;
 }
 
+function minutesToTime(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
 function fmtHour(h: number, use24h: boolean): string {
   if (h === 0) return "";
   if (use24h) return `${String(h).padStart(2, "0")}:00`;
   if (h === 12) return "12 PM";
   return h > 12 ? `${h - 12} PM` : `${h} AM`;
+}
+
+function fmtDropTime(minutes: number, use24h: boolean): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (use24h) return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  const period = h >= 12 ? "PM" : "AM";
+  const displayH = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${displayH}:${String(m).padStart(2, "0")} ${period}`;
 }
 
 // ─── Overlap layout algorithm ─────────────────────────────────────────────────
@@ -79,13 +94,19 @@ function layoutDayEvents(events: CalendarEvent[]): LayoutEvent[] {
 // ─── WeekView component ───────────────────────────────────────────────────────
 
 export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }: WeekViewProps) {
-  const { filteredEvents, getCalendar, use24h, weekStartsMonday } = useCalendar();
+  const { filteredEvents, getCalendar, use24h, weekStartsMonday, updateEvent } = useCalendar();
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const HOUR_HEIGHT = isMobile ? 44 : 48;
   const TIME_COL_WIDTH = isMobile ? 44 : 56;
   const DAY_CIRCLE = isMobile ? 32 : 40;
+
+  // ── Drag state ──────────────────────────────────────────────────────────────
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dropInfo, setDropInfo] = useState<{ dayStr: string; minutes: number } | null>(null);
+  const draggedEventRef = useRef<CalendarEvent | null>(null);
+  const dragOffsetMinutesRef = useRef(0);
 
   const weekOpts = useMemo(
     () => ({ weekStartsOn: (weekStartsMonday ? 1 : 0) as 0 | 1 }),
@@ -114,15 +135,54 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
     return filteredEvents.filter((e) => !e.allDay && e.date === dayStr);
   };
 
-  const allDayEventsInRange = useMemo(
-    () => filteredEvents.filter((e) => e.allDay),
-    [filteredEvents]
-  );
-
   const MIN_DAY_WIDTH = 64;
   const minGridWidth = isMobile && days > 1
     ? TIME_COL_WIDTH + days * MIN_DAY_WIDTH
     : undefined;
+
+  // ── Drag helpers ────────────────────────────────────────────────────────────
+
+  function calcDropMinutes(clientY: number, columnEl: HTMLElement): number {
+    const rect = columnEl.getBoundingClientRect();
+    const y = clientY - rect.top;
+    const raw = (y / HOUR_HEIGHT) * 60 - dragOffsetMinutesRef.current;
+    const snapped = Math.round(raw / 15) * 15;
+    return Math.max(0, Math.min(snapped, 23 * 60));
+  }
+
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>, dayStr: string) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const minutes = calcDropMinutes(e.clientY, e.currentTarget);
+    setDropInfo({ dayStr, minutes });
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>, dayStr: string) {
+    e.preventDefault();
+    const ev = draggedEventRef.current;
+    if (!ev) return;
+
+    const startMinutes = calcDropMinutes(e.clientY, e.currentTarget);
+    const duration = timeToMinutes(ev.endTime) - timeToMinutes(ev.startTime);
+    const endMinutes = Math.min(startMinutes + duration, 24 * 60 - 1);
+
+    updateEvent({
+      ...ev,
+      date: dayStr,
+      startTime: minutesToTime(startMinutes),
+      endTime: minutesToTime(endMinutes),
+    });
+
+    draggedEventRef.current = null;
+    setDraggingId(null);
+    setDropInfo(null);
+  }
+
+  function handleDragEnd() {
+    draggedEventRef.current = null;
+    setDraggingId(null);
+    setDropInfo(null);
+  }
 
   return (
     <div
@@ -240,6 +300,7 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                 const dayEvents = getEventsForDay(day);
                 const laid = layoutDayEvents(dayEvents);
                 const isDayToday = isToday(day);
+                const isDropTarget = dropInfo?.dayStr === dayStr;
 
                 return (
                   <div
@@ -249,7 +310,19 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       minWidth: isMobile && days > 1 ? MIN_DAY_WIDTH : undefined,
                       position: "relative",
                       borderLeft: "1px solid hsl(var(--md-sys-color-outline-variant))",
+                      backgroundColor: isDropTarget
+                        ? "hsl(var(--md-sys-color-primary-container) / 0.15)"
+                        : undefined,
+                      transition: "background-color 0.1s",
                     }}
+                    onDragOver={(e) => handleDragOver(e, dayStr)}
+                    onDragLeave={(e) => {
+                      // only clear if leaving the column entirely (not entering a child)
+                      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                        setDropInfo(null);
+                      }
+                    }}
+                    onDrop={(e) => handleDrop(e, dayStr)}
                   >
                     {/* Hour rows */}
                     {HOURS.map((h) => (
@@ -263,14 +336,63 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                           boxSizing: "border-box",
                         }}
                         onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLDivElement).style.backgroundColor =
-                            "hsl(var(--md-sys-color-surface-container) / 0.6)";
+                          if (!draggingId) {
+                            (e.currentTarget as HTMLDivElement).style.backgroundColor =
+                              "hsl(var(--md-sys-color-surface-container) / 0.6)";
+                          }
                         }}
                         onMouseLeave={(e) => {
                           (e.currentTarget as HTMLDivElement).style.backgroundColor = "transparent";
                         }}
                       />
                     ))}
+
+                    {/* Drop indicator */}
+                    {isDropTarget && dropInfo && (
+                      <>
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: (dropInfo.minutes / 60) * HOUR_HEIGHT - 1,
+                            left: 0,
+                            right: 0,
+                            height: 2,
+                            backgroundColor: "hsl(var(--md-sys-color-primary))",
+                            zIndex: 10,
+                            pointerEvents: "none",
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: "absolute",
+                              left: -4,
+                              top: -4,
+                              width: 10,
+                              height: 10,
+                              borderRadius: "50%",
+                              backgroundColor: "hsl(var(--md-sys-color-primary))",
+                            }}
+                          />
+                        </div>
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: (dropInfo.minutes / 60) * HOUR_HEIGHT + 4,
+                            left: 8,
+                            fontSize: 10,
+                            fontWeight: 600,
+                            color: "hsl(var(--md-sys-color-primary))",
+                            pointerEvents: "none",
+                            zIndex: 10,
+                            backgroundColor: "hsl(var(--md-sys-color-surface))",
+                            padding: "1px 4px",
+                            borderRadius: 4,
+                          }}
+                        >
+                          {fmtDropTime(dropInfo.minutes, use24h)}
+                        </div>
+                      </>
+                    )}
 
                     {/* Events */}
                     {laid.map((ev) => {
@@ -283,10 +405,29 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       const leftPct = (ev.col / ev.cols) * 100;
                       const widthPct = (1 / ev.cols) * 100;
                       const isShort = height < 30;
+                      const isDragging = draggingId === ev.id;
 
                       return (
                         <button
                           key={ev.id}
+                          draggable
+                          onDragStart={(e) => {
+                            draggedEventRef.current = ev;
+                            setDraggingId(ev.id);
+                            dragOffsetMinutesRef.current = Math.max(
+                              0,
+                              (e.nativeEvent.offsetY / HOUR_HEIGHT) * 60
+                            );
+                            e.dataTransfer.effectAllowed = "move";
+                            // transparent drag ghost
+                            const ghost = document.createElement("div");
+                            ghost.style.position = "fixed";
+                            ghost.style.top = "-1000px";
+                            document.body.appendChild(ghost);
+                            e.dataTransfer.setDragImage(ghost, 0, 0);
+                            setTimeout(() => document.body.removeChild(ghost), 0);
+                          }}
+                          onDragEnd={handleDragEnd}
                           onClick={(e) => {
                             e.stopPropagation();
                             const rect = e.currentTarget.getBoundingClientRect();
@@ -304,15 +445,19 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                             borderRadius: 6,
                             padding: isShort ? "2px 4px" : "4px 6px",
                             textAlign: "left",
-                            cursor: "pointer",
+                            cursor: isDragging ? "grabbing" : "grab",
                             overflow: "hidden",
-                            boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.15)",
+                            boxShadow: isDragging
+                              ? "none"
+                              : "inset 0 0 0 1px rgba(255,255,255,0.15)",
                             display: "flex",
                             flexDirection: "column",
                             gap: 1,
                             lineHeight: 1.2,
-                            zIndex: 1,
+                            zIndex: isDragging ? 0 : 1,
                             fontFamily: "inherit",
+                            opacity: isDragging ? 0.4 : 1,
+                            transition: "opacity 0.1s",
                           }}
                         >
                           <div

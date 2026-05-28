@@ -1,0 +1,38 @@
+---
+description: Drag and drop behavior for calendar week/day views
+globs: client/components/calendar/WeekView.tsx
+alwaysApply: false
+---
+
+## Drag and Drop in WeekView
+
+Drag-and-drop is implemented natively (no library) in `WeekView.tsx` using the HTML5 Drag and Drop API.
+
+### State
+
+- `draggingId` (useState) — id of the event currently being dragged; used to dim the source event
+- `dropInfo` (useState) — `{ dayStr, minutes }` for the current drag-over position; drives the indicator line
+- `draggedEventRef` (useRef<CalendarEvent>) — holds the full event object being dragged (avoids re-renders)
+- `dragOffsetMinutesRef` (useRef<number>) — minutes from event top to grab point, for correct snap positioning
+
+### How it works
+
+1. **DragStart** on event `<button>`: store event in `draggedEventRef`, calculate grab offset from `e.nativeEvent.offsetY`, hide the default browser ghost image.
+2. **DragOver** on day column `<div>`: prevent default, compute drop minutes via `calcDropMinutes` (clientY − column rect.top → hours → minutes, snapped to 15-min grid), update `dropInfo`.
+3. **DragLeave** on day column: clear `dropInfo` only when leaving the column entirely (check `relatedTarget`).
+4. **Drop** on day column: compute final start time, preserve event duration, call `updateEvent` from CalendarContext.
+5. **DragEnd** on event `<button>`: clear all drag state (fires even if dropped outside a valid target).
+
+### Visual feedback
+
+- Source event: `opacity: 0.4`, `cursor: grabbing`
+- Drop column: subtle primary-container background tint
+- Drop indicator: 2px primary-colored horizontal line with circle cap + time label (matches "now" line style)
+
+### Snapping
+
+Times snap to the nearest 15-minute interval. Min start = 00:00, max = 23:00 (clamped to avoid overflow).
+
+### DayView
+
+`DayView.tsx` is a thin wrapper around `WeekView` with `days=1`. Drag-and-drop works identically.
