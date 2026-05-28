@@ -1,7 +1,5 @@
 import "@material/web/icon/icon.js";
 import "@material/web/iconbutton/icon-button.js";
-import "@material/web/tabs/tabs.js";
-import "@material/web/tabs/primary-tab.js";
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ViewMode } from "../../types/calendar";
@@ -22,6 +20,72 @@ interface TopBarProps {
   headerLabel: string;
 }
 
+function ViewTab({
+  view,
+  active,
+  isMobile,
+  onClick,
+}: {
+  view: { id: string; label: string; icon: string };
+  active: boolean;
+  isMobile: boolean;
+  onClick: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  const bg = active
+    ? "hsl(var(--md-sys-color-secondary-container))"
+    : hovered
+    ? "hsl(var(--md-sys-color-surface-container))"
+    : "transparent";
+
+  const color = active
+    ? "hsl(var(--md-sys-color-on-secondary-container))"
+    : hovered
+    ? "hsl(var(--md-sys-color-on-surface))"
+    : "hsl(var(--md-sys-color-on-surface-variant))";
+
+  return (
+    <button
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        padding: isMobile ? "10px 16px" : "10px 24px",
+        border: 0,
+        borderBottom: active
+          ? "3px solid hsl(var(--md-sys-color-primary))"
+          : "3px solid transparent",
+        backgroundColor: bg,
+        color,
+        fontSize: 14,
+        fontWeight: active ? 600 : 500,
+        fontFamily: "inherit",
+        cursor: "pointer",
+        borderRadius: "8px 8px 0 0",
+        transition: "background-color 0.15s, color 0.15s, border-color 0.15s",
+        whiteSpace: "nowrap",
+      }}
+    >
+      <md-icon
+        style={{
+          fontSize: "18px",
+          color: "inherit",
+        }}
+      >
+        {view.icon}
+      </md-icon>
+      {!isMobile && view.label}
+    </button>
+  );
+}
+
 export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const { selectedDate, viewMode, setViewMode, goNext, goPrev, goToday, search, setSearch,
     use24h, setUse24h, weekStartsMonday, setWeekStartsMonday } = useCalendar();
@@ -29,31 +93,10 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const isMobile = useIsMobile();
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const tabsRef = useRef<HTMLElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const avatarRef = useRef<HTMLDivElement>(null);
-
-  // Sync md-tabs activeTabIndex when viewMode changes externally
-  useEffect(() => {
-    const el = tabsRef.current as any;
-    if (!el) return;
-    const idx = VIEWS.findIndex((v) => v.id === viewMode);
-    if (idx !== -1 && el.activeTabIndex !== idx) el.activeTabIndex = idx;
-  }, [viewMode]);
-
-  // Listen for tab change events
-  useEffect(() => {
-    const el = tabsRef.current;
-    if (!el) return;
-    const handler = (e: Event) => {
-      const idx = (e.target as any).activeTabIndex as number;
-      setViewMode(VIEWS[idx].id);
-    };
-    el.addEventListener("change", handler);
-    return () => el.removeEventListener("change", handler);
-  }, [setViewMode]);
 
   useEffect(() => {
     if (!settingsOpen) return;
@@ -439,23 +482,25 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
     </header>
 
     {/* View tabs strip */}
-    <div style={{ flexShrink: 0, backgroundColor: "hsl(var(--md-sys-color-surface))" }}>
-      <md-tabs
-        ref={tabsRef as React.RefObject<HTMLElement>}
-        aria-label="Calendar view"
-        style={{ width: "100%" }}
-      >
-        {VIEWS.map((v) => (
-          <md-primary-tab
-            key={v.id}
-            inline-icon
-            aria-label={isMobile ? v.label : undefined}
-          >
-            <md-icon slot="icon">{v.icon}</md-icon>
-            {!isMobile && v.label}
-          </md-primary-tab>
-        ))}
-      </md-tabs>
+    <div
+      role="tablist"
+      aria-label="Calendar view"
+      style={{
+        flexShrink: 0,
+        display: "flex",
+        backgroundColor: "hsl(var(--md-sys-color-surface))",
+        borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
+      }}
+    >
+      {VIEWS.map((v) => (
+        <ViewTab
+          key={v.id}
+          view={v}
+          active={viewMode === v.id}
+          isMobile={isMobile}
+          onClick={() => setViewMode(v.id)}
+        />
+      ))}
     </div>
   </>
   );
