@@ -1,0 +1,57 @@
+---
+description: Auth context, sign-in flow, and account management
+globs:
+alwaysApply: false
+---
+
+## Auth Architecture
+
+Auth state lives in `client/contexts/AuthContext.tsx` (separate from CalendarContext). It wraps the entire app via `<AuthProvider>` in `client/App.tsx`.
+
+### Account type (`client/types/auth.ts`)
+
+interface Account { id, name, email, initials, color }
+```
+
+### Mock accounts (seeded in AuthContext)
+| id | name | email | initials | color |
+|----|------|-------|----------|-------|
+| 1 | Alex Chen | alex.chen@gmail.com | AC | #0B57D0 |
+| 2 | Alex Chen (Work) | achen@company.com | AC | #33B679 |
+| 3 | Maya Chen | maya.chen@gmail.com | MC | #8E24AA |
+
+### useAuth() hook
+```ts
+const { activeAccount, accounts, signIn, signOut, switchAccount } = useAuth();
+```
+
+### Session behavior
+- In-memory only (resets on page refresh — F-17)
+- No localStorage or cookies
+- Calendar events are shared across all accounts (per-account isolation is out of scope)
+
+## Routing
+
+- `/sign-in` → `<SignInPage />` — shown when no active account
+- `/` → wrapped in `<RequireAuth>` — redirects to `/sign-in` if no active account
+- `RequireAuth` is a small inline guard in `client/App.tsx`
+
+## Sign-in screen (`client/pages/SignInPage.tsx`)
+- Full-page centered layout, 448px card, 28px border-radius
+- Lists all mock accounts; clicking one calls `signIn(id)` then `navigate("/")`
+- Keyboard accessible (tabIndex + Enter)
+
+## Profile menu (`client/components/calendar/ProfileMenu.tsx`)
+- Mounted by `TopBar` when `profileMenuOpen === true`
+- 360px dropdown, anchored relative to the avatar button
+- Sections: current user | other accounts | settings + sign-out | footer links
+- Click-outside closes via mousedown listener on document
+- Sign out: calls `signOut()` + navigates to `/sign-in`
+- Switch account: calls `switchAccount(id)` + closes menu
+- Settings: calls `onOpenSettings()` prop (forwarded to TopBar's `setSettingsOpen`)
+
+## TopBar avatar
+- Shows `activeAccount.initials` and `activeAccount.color`
+- On click: toggles `profileMenuOpen` (local state)
+- Open state: 2px primary outline ring + outlineOffset 2
+- `aria-label="Account"`, `role="button"`, keyboard-operable

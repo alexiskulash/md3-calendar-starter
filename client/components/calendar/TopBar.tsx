@@ -7,6 +7,8 @@ import { format } from "date-fns";
 import { ViewMode } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { useAuth } from "../../contexts/AuthContext";
+import { ProfileMenu } from "./ProfileMenu";
 
 const VIEWS: { id: ViewMode; label: string; icon: string }[] = [
   { id: "day",      label: "Day",      icon: "calendar_view_day" },
@@ -23,12 +25,15 @@ interface TopBarProps {
 export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const { selectedDate, viewMode, setViewMode, goNext, goPrev, goToday, search, setSearch,
     use24h, setUse24h, weekStartsMonday, setWeekStartsMonday } = useCalendar();
+  const { activeAccount } = useAuth();
   const isMobile = useIsMobile();
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const tabsRef = useRef<HTMLElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const avatarRef = useRef<HTMLDivElement>(null);
 
   // Sync md-tabs activeTabIndex when viewMode changes externally
   useEffect(() => {
@@ -393,26 +398,43 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         </div>
       )}
 
-      {/* Avatar */}
-      <div
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: "50%",
-          backgroundColor: "hsl(var(--md-sys-color-primary))",
-          color: "hsl(var(--md-sys-color-on-primary))",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 13,
-          fontWeight: 600,
-          marginLeft: isMobile ? 2 : 4,
-          flexShrink: 0,
-          cursor: "pointer",
-        }}
-        title="Alex Chen"
-      >
-        AC
+      {/* Avatar + Profile Menu */}
+      <div ref={avatarRef} style={{ position: "relative", flexShrink: 0 }}>
+        <div
+          onClick={() => setProfileMenuOpen((v) => !v)}
+          aria-label="Account"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setProfileMenuOpen((v) => !v); }}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            backgroundColor: activeAccount?.color ?? "hsl(var(--md-sys-color-primary))",
+            color: "#fff",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 13,
+            fontWeight: 600,
+            marginLeft: isMobile ? 2 : 4,
+            cursor: "pointer",
+            outline: profileMenuOpen
+              ? "2px solid hsl(var(--md-sys-color-primary))"
+              : "none",
+            outlineOffset: 2,
+          }}
+          title={activeAccount?.name ?? "Account"}
+        >
+          {activeAccount?.initials ?? "?"}
+        </div>
+
+        {profileMenuOpen && (
+          <ProfileMenu
+            onClose={() => setProfileMenuOpen(false)}
+            onOpenSettings={() => setSettingsOpen(true)}
+          />
+        )}
       </div>
     </header>
 
