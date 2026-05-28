@@ -202,7 +202,6 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
         <div
           style={{
             display: "flex",
-            borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
             paddingRight: isMobile && days > 1 ? 0 : 8,
             flexShrink: 0,
           }}
@@ -218,7 +217,6 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                   minWidth: isMobile && days > 1 ? MIN_DAY_WIDTH : undefined,
                   padding: isMobile ? "6px 0 4px" : "8px 0 6px",
                   textAlign: "center",
-                  borderLeft: "1px solid hsl(var(--md-sys-color-outline-variant))",
                 }}
               >
                 <div
@@ -250,7 +248,8 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       ? "hsl(var(--md-sys-color-on-primary))"
                       : "hsl(var(--md-sys-color-on-surface))",
                     fontSize: isMobile ? 16 : 22,
-                    fontWeight: isCurrentDay ? 600 : 400,
+                    fontWeight: isCurrentDay ? 500 : 300,
+                  boxShadow: isCurrentDay ? "var(--neu-raised-sm)" : "none",
                   }}
                 >
                   {format(day, "d")}
@@ -309,9 +308,8 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       flex: 1,
                       minWidth: isMobile && days > 1 ? MIN_DAY_WIDTH : undefined,
                       position: "relative",
-                      borderLeft: "1px solid hsl(var(--md-sys-color-outline-variant))",
                       backgroundColor: isDropTarget
-                        ? "hsl(var(--md-sys-color-primary-container) / 0.15)"
+                        ? "rgba(0,0,0,0.03)"
                         : undefined,
                       transition: "background-color 0.1s",
                     }}
@@ -337,8 +335,7 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                         }}
                         onMouseEnter={(e) => {
                           if (!draggingId) {
-                            (e.currentTarget as HTMLDivElement).style.backgroundColor =
-                              "hsl(var(--md-sys-color-surface-container) / 0.6)";
+                            (e.currentTarget as HTMLDivElement).style.backgroundColor = "rgba(0,0,0,0.03)";
                           }
                         }}
                         onMouseLeave={(e) => {
@@ -384,9 +381,10 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                             color: "hsl(var(--md-sys-color-primary))",
                             pointerEvents: "none",
                             zIndex: 10,
-                            backgroundColor: "hsl(var(--md-sys-color-surface))",
-                            padding: "1px 4px",
-                            borderRadius: 4,
+                            backgroundColor: "var(--neu-base)",
+                            padding: "2px 6px",
+                            borderRadius: 8,
+                            boxShadow: "var(--neu-raised-sm)",
                           }}
                         >
                           {fmtDropTime(dropInfo.minutes, use24h)}
@@ -439,34 +437,46 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                             height,
                             left: `calc(${leftPct}% + 2px)`,
                             width: `calc(${widthPct}% - 4px)`,
-                            backgroundColor: color,
-                            color: "#fff",
+                            backgroundColor: "var(--neu-base)",
+                            color: "var(--neu-text)",
                             border: 0,
-                            borderRadius: 6,
-                            padding: isShort ? "2px 4px" : "4px 6px",
+                            borderRadius: 12,
+                            padding: isShort ? "2px 4px 2px 10px" : "5px 6px 5px 10px",
                             textAlign: "left",
                             cursor: isDragging ? "grabbing" : "grab",
                             overflow: "hidden",
-                            boxShadow: isDragging
-                              ? "none"
-                              : "inset 0 0 0 1px rgba(255,255,255,0.15)",
+                            boxShadow: isDragging ? "var(--neu-inset-sm)" : "var(--neu-raised-sm)",
                             display: "flex",
                             flexDirection: "column",
                             gap: 1,
-                            lineHeight: 1.2,
+                            lineHeight: 1.3,
                             zIndex: isDragging ? 0 : 1,
                             fontFamily: "inherit",
-                            opacity: isDragging ? 0.4 : 1,
-                            transition: "opacity 0.1s",
+                            opacity: isDragging ? 0.5 : 1,
+                            transition: "opacity 0.1s, box-shadow 0.15s",
                           }}
                         >
+                          {/* Left accent strip */}
+                          <div
+                            style={{
+                              position: "absolute",
+                              left: 0,
+                              top: 0,
+                              bottom: 0,
+                              width: 4,
+                              backgroundColor: color,
+                              borderRadius: "12px 0 0 12px",
+                              opacity: 0.55,
+                            }}
+                          />
                           <div
                             style={{
                               fontSize: isMobile ? 11 : 12,
-                              fontWeight: 600,
+                              fontWeight: 400,
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
+                              letterSpacing: 0.1,
                             }}
                           >
                             {ev.title}
@@ -474,11 +484,12 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                           {!isShort && (
                             <div
                               style={{
-                                fontSize: 11,
-                                opacity: 0.9,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
+                                fontSize: 10,
+                              fontWeight: 300,
+                              opacity: 0.75,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
                               }}
                             >
                               {ev.startTime}
@@ -498,7 +509,7 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                           left: 0,
                           right: 0,
                           height: 2,
-                          backgroundColor: "#EA4335",
+                          backgroundColor: "hsl(var(--md-sys-color-error))",
                           zIndex: 2,
                           pointerEvents: "none",
                         }}
@@ -511,7 +522,7 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                             width: 10,
                             height: 10,
                             borderRadius: "50%",
-                            backgroundColor: "#EA4335",
+                            backgroundColor: "hsl(var(--md-sys-color-error))",
                           }}
                         />
                       </div>
