@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, isToday } from "date-fns";
 import { CalendarEvent } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
@@ -79,9 +79,20 @@ function layoutDayEvents(events: CalendarEvent[]): LayoutEvent[] {
 // ─── WeekView component ───────────────────────────────────────────────────────
 
 export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }: WeekViewProps) {
-  const { filteredEvents, getCalendar, use24h, weekStartsMonday } = useCalendar();
+  const { filteredEvents, events, getCalendar, use24h, weekStartsMonday, updateEvent } = useCalendar();
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const [dragState, setDragState] = useState<{
+    eventId: string;
+    grabOffsetMin: number;
+    duration: number;
+  } | null>(null);
+
+  const [dropPreview, setDropPreview] = useState<{
+    dayStr: string;
+    startMin: number;
+  } | null>(null);
 
   const HOUR_HEIGHT = isMobile ? 44 : 48;
   const TIME_COL_WIDTH = isMobile ? 44 : 56;
@@ -108,6 +119,39 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const nowTop = (nowMinutes / 60) * HOUR_HEIGHT;
+
+  function minToTime(min: number): string {
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  }
+
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>, dayStr: string) {
+    if (!dragState) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const rect = e.currentTarget.getBoundingClientRect();
+    const rawMin = ((e.clientY - rect.top) / HOUR_HEIGHT) * 60 - dragState.grabOffsetMin;
+    const snapped = Math.round(rawMin / 15) * 15;
+    const clamped = Math.max(0, Math.min(snapped, 24 * 60 - dragState.duration));
+    setDropPreview((prev) =>
+      prev?.dayStr === dayStr && prev?.startMin === clamped
+        ? prev
+        : { dayStr, startMin: clamped }
+    );
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>, dayStr: string) {
+    if (!dragState || !dropPreview) return;
+    e.preventDefault();
+    const ev = events.find((ev) => ev.id === dragState.eventId);
+    if (!ev) return;
+    const newStart = dropPreview.startMin;
+    const newEnd = newStart + dragState.duration;
+    updateEvent({ ...ev, date: dayStr, startTime: minToTime(newStart), endTime: minToTime(newEnd) });
+    setDragState(null);
+    setDropPreview(null);
+  }
 
   const getEventsForDay = (day: Date): CalendarEvent[] => {
     const dayStr = format(day, "yyyy-MM-dd");
@@ -244,6 +288,14 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                 return (
                   <div
                     key={dayStr}
+                    onDragOver={(e) => handleDragOver(e, dayStr)}
+                    onDragLeave={(e) => {
+                      // only clear if leaving the column entirely (not moving to a child)
+                      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                        setDropPreview(null);
+                      }
+                    }}
+                    onDrop={(e) => handleDrop(e, dayStr)}
                     style={{
                       flex: 1,
                       minWidth: isMobile && days > 1 ? MIN_DAY_WIDTH : undefined,
@@ -287,6 +339,19 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       return (
                         <button
                           key={ev.id}
+                          draggable
+                          onDragStart={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const grabOffsetMin = ((e.clientY - rect.top) / HOUR_HEIGHT) * 60;
+                            const duration = timeToMinutes(ev.endTime) - timeToMinutes(ev.startTime);
+                            setDragState({ eventId: ev.id, grabOffsetMin, duration });
+                            e.dataTransfer.effectAllowed = "move";
+                            e.dataTransfer.setData("text/plain", ev.id);
+                          }}
+                          onDragEnd={() => {
+                            setDragState(null);
+                            setDropPreview(null);
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             const rect = e.currentTarget.getBoundingClientRect();
@@ -304,15 +369,17 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                             borderRadius: 6,
                             padding: isShort ? "2px 4px" : "4px 6px",
                             textAlign: "left",
-                            cursor: "pointer",
+                            cursor: dragState ? "grabbing" : "grab",
                             overflow: "hidden",
                             boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.15)",
                             display: "flex",
                             flexDirection: "column",
                             gap: 1,
                             lineHeight: 1.2,
-                            zIndex: 1,
+                            zIndex: dragState?.eventId === ev.id ? 0 : 1,
                             fontFamily: "inherit",
+                            opacity: dragState?.eventId === ev.id ? 0.4 : 1,
+                            transition: "opacity 0.1s",
                           }}
                         >
                           <div
@@ -343,6 +410,24 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                         </button>
                       );
                     })}
+
+                    {/* Drop preview */}
+                    {dropPreview?.dayStr === dayStr && dragState && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: (dropPreview.startMin / 60) * HOUR_HEIGHT + 1,
+                          height: Math.max((dragState.duration / 60) * HOUR_HEIGHT - 2, 18),
+                          left: 2,
+                          right: 4,
+                          backgroundColor: "hsl(var(--md-sys-color-primary-container) / 0.5)",
+                          border: "2px dashed hsl(var(--md-sys-color-primary))",
+                          borderRadius: 6,
+                          zIndex: 10,
+                          pointerEvents: "none",
+                        }}
+                      />
+                    )}
 
                     {/* Now line */}
                     {isDayToday && (
