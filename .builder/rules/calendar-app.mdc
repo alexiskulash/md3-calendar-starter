@@ -26,7 +26,7 @@ client/
 │       └── EventDialog.tsx             # md-dialog for creating / editing events
 └── types/
     └── calendar.ts                     # CalendarEvent, ViewMode, EventColor types
-```
+
 
 ## State Management
 
@@ -81,6 +81,32 @@ Events cycle through 3 MD3 color roles:
 | Click event chip | Any view | Opens edit dialog |
 | Click "Create" in sidebar | `Sidebar` | Opens blank create dialog |
 | Click mini-calendar date | `MiniCalendar` | Updates `selectedDate` |
+| Drag event in WeekView/DayView | `WeekView` | Moves event to new time/day via `updateEvent` |
+
+## Drag and Drop (WeekView / DayView)
+
+Implemented via Pointer Events API in `WeekView.tsx`. No external library.
+
+### Pattern
+- `onPointerDown` on event button: record drag metadata in refs (`draggingRef`, `dragPreviewRef`, `didDragRef`)
+- `pointermove` on document: update `dragPreview` state (triggers re-render for ghost preview); drag only activates after 5px movement
+- `pointerup` on document: call `updateEvent` with new `date`/`startTime`/`endTime`, then clean up
+- `onClick` on event button: checks `didDragRef.current` — skips edit dialog if it was a drag
+
+### Key state
+- `draggingRef` — non-reactive drag metadata (event, durationMin, offsetMin)
+- `dragPreviewRef` — ref mirror of `dragPreview` state (for reading in closures)
+- `didDragRef` — boolean, true once pointer moved >5px; prevents spurious click-to-edit
+- `dragPreview` (useState) — drives UI: ghost position, source event opacity, column highlight
+
+### Snapping
+- Time snaps to **15-minute** intervals
+- Clamped to 00:00 – 23:59 (end can't exceed midnight)
+
+### Visual feedback
+- Source event: `opacity: 0.35`
+- Target column: subtle background highlight
+- Ghost (`DragGhost` component): outlined box with calendar color, shows title + time range
 
 ## MD3 Components Used
 
