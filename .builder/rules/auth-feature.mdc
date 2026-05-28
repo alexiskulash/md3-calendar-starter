@@ -1,0 +1,53 @@
+---
+description: Auth feature — sign-in screen and account management
+globs:
+alwaysApply: false
+---
+
+## Overview
+
+The calendar app has an in-memory auth system (no localStorage, no backend).
+
+## Files
+
+| File | Role |
+|------|------|
+| `client/types/auth.ts` | `UserAccount` interface |
+| `client/components/auth/AuthContext.tsx` | `AuthProvider`, `useAuth()` hook |
+| `client/components/auth/SignInScreen.tsx` | Full-page account picker |
+| `client/components/auth/ProfileMenu.tsx` | Avatar dropdown (360px, anchored top-right) |
+
+## Accounts
+
+Two pre-seeded accounts in `AuthContext.tsx`:
+- Alex Chen — `alex.chen@gmail.com` — color `#0B57D0` — initials `AC`
+- Jordan Park — `jordan.park@work.com` — color `#33B679` — initials `JP`
+
+## Auth flow
+
+- App starts unauthenticated (`activeAccount = null`) → `SignInScreen` shown
+- Clicking an account row calls `signIn(id)` → calendar renders immediately
+- Avatar in `TopBar` shows current account initials + color; clicking opens `ProfileMenu`
+- "Sign out" in `ProfileMenu` calls `signOut()` → back to `SignInScreen`
+- "Switch account" in `ProfileMenu` calls `switchAccount(id)` → same calendar, new identity
+- Session is in-memory only — page refresh resets to unauthenticated
+
+## AuthGate pattern
+
+`client/App.tsx` renders an `AuthGate` component inside `BrowserRouter`:
+
+
+function AuthGate() {
+  const { activeAccount } = useAuth();
+  return activeAccount ? <Index /> : <SignInScreen />;
+}
+```
+
+`AuthProvider` wraps the entire app (outside `BrowserRouter`).
+
+## TopBar avatar
+
+`TopBar` reads `useAuth().activeAccount` to display dynamic initials and color.
+`profileMenuOpen` state controls whether `ProfileMenu` is shown.
+The avatar div has `role="button"`, `aria-label="Account"`, `tabIndex={0}`, keyboard support.
+When `profileMenuOpen` is true, a 2px primary outline ring is applied to the avatar.
