@@ -1,16 +1,18 @@
 import "@material/web/icon/icon.js";
 import "@material/web/iconbutton/icon-button.js";
+import "@material/web/tabs/tabs.js";
+import "@material/web/tabs/primary-tab.js";
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ViewMode } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
 
-const VIEWS: { id: ViewMode; label: string }[] = [
-  { id: "day", label: "Day" },
-  { id: "week", label: "Week" },
-  { id: "month", label: "Month" },
-  { id: "schedule", label: "Schedule" },
+const VIEWS: { id: ViewMode; label: string; icon: string }[] = [
+  { id: "day",      label: "Day",      icon: "calendar_view_day" },
+  { id: "week",     label: "Week",     icon: "calendar_view_week" },
+  { id: "month",    label: "Month",    icon: "calendar_view_month" },
+  { id: "schedule", label: "Schedule", icon: "view_agenda" },
 ];
 
 interface TopBarProps {
@@ -24,21 +26,29 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const isMobile = useIsMobile();
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
-  const viewDropdownRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
+  // Sync md-tabs activeTabIndex when viewMode changes externally
   useEffect(() => {
-    if (!viewDropdownOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (viewDropdownRef.current && !viewDropdownRef.current.contains(e.target as Node)) {
-        setViewDropdownOpen(false);
-      }
+    const el = tabsRef.current as any;
+    if (!el) return;
+    const idx = VIEWS.findIndex((v) => v.id === viewMode);
+    if (idx !== -1 && el.activeTabIndex !== idx) el.activeTabIndex = idx;
+  }, [viewMode]);
+
+  // Listen for tab change events
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const handler = (e: Event) => {
+      const idx = (e.target as any).activeTabIndex as number;
+      setViewMode(VIEWS[idx].id);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [viewDropdownOpen]);
+    el.addEventListener("change", handler);
+    return () => el.removeEventListener("change", handler);
+  }, [setViewMode]);
 
   useEffect(() => {
     if (!settingsOpen) return;
@@ -63,6 +73,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   };
 
   return (
+  <>
     <header
       style={{
         height: isMobile ? 56 : 64,
@@ -382,90 +393,6 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         </div>
       )}
 
-      {/* View switcher — custom dropdown */}
-      <div
-        ref={viewDropdownRef}
-        style={{ position: "relative", marginLeft: isMobile ? 0 : 4, flexShrink: 0 }}
-      >
-        {/* Trigger button */}
-        <button
-          onClick={() => setViewDropdownOpen((v) => !v)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            height: 36,
-            padding: isMobile ? "0 8px 0 10px" : "0 10px 0 14px",
-            borderRadius: 4,
-            border: "1px solid hsl(var(--md-sys-color-outline))",
-            backgroundColor: "transparent",
-            color: "hsl(var(--md-sys-color-on-surface))",
-            fontSize: isMobile ? 13 : 14,
-            fontWeight: 500,
-            cursor: "pointer",
-            fontFamily: "inherit",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {VIEWS.find((v) => v.id === viewMode)?.label ?? "Week"}
-          <span style={{ fontSize: 18, lineHeight: 1, color: "hsl(var(--md-sys-color-on-surface-variant))", marginRight: -2 }}>▾</span>
-        </button>
-
-        {/* Dropdown menu */}
-        {viewDropdownOpen && (
-          <div
-            style={{
-              position: "absolute",
-              top: "calc(100% + 4px)",
-              right: 0,
-              minWidth: 120,
-              backgroundColor: "hsl(var(--md-sys-color-surface-container))",
-              borderRadius: 8,
-              boxShadow: "0 4px 16px rgba(0,0,0,0.16)",
-              zIndex: 200,
-              overflow: "hidden",
-            }}
-          >
-            {VIEWS.map((v) => (
-              <button
-                key={v.id}
-                onClick={() => { setViewMode(v.id); setViewDropdownOpen(false); }}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  padding: "10px 16px",
-                  border: 0,
-                  textAlign: "left",
-                  backgroundColor:
-                    viewMode === v.id
-                      ? "hsl(var(--md-sys-color-secondary-container))"
-                      : "transparent",
-                  color:
-                    viewMode === v.id
-                      ? "hsl(var(--md-sys-color-on-secondary-container))"
-                      : "hsl(var(--md-sys-color-on-surface))",
-                  fontSize: 14,
-                  fontWeight: viewMode === v.id ? 600 : 400,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                }}
-                onMouseEnter={(e) => {
-                  if (viewMode !== v.id)
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                      "hsl(var(--md-sys-color-surface-container-high))";
-                }}
-                onMouseLeave={(e) => {
-                  if (viewMode !== v.id)
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
-                }}
-              >
-                {v.label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* Avatar */}
       <div
         style={{
@@ -488,5 +415,26 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         AC
       </div>
     </header>
+
+    {/* View tabs strip */}
+    <div style={{ flexShrink: 0, backgroundColor: "hsl(var(--md-sys-color-surface))" }}>
+      <md-tabs
+        ref={tabsRef as React.RefObject<HTMLElement>}
+        aria-label="Calendar view"
+        style={{ width: "100%" }}
+      >
+        {VIEWS.map((v) => (
+          <md-primary-tab
+            key={v.id}
+            inline-icon
+            aria-label={isMobile ? v.label : undefined}
+          >
+            <md-icon slot="icon">{v.icon}</md-icon>
+            {!isMobile && v.label}
+          </md-primary-tab>
+        ))}
+      </md-tabs>
+    </div>
+  </>
   );
 }
