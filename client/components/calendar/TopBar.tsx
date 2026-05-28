@@ -1,7 +1,8 @@
 import "@material/web/icon/icon.js";
 import "@material/web/iconbutton/icon-button.js";
+import "@material/web/tabs/tabs.js";
+import "@material/web/tabs/primary-tab.js";
 import { useEffect, useRef, useState } from "react";
-import { format } from "date-fns";
 import { ViewMode } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
@@ -19,26 +20,40 @@ interface TopBarProps {
 }
 
 export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
-  const { selectedDate, viewMode, setViewMode, goNext, goPrev, goToday, search, setSearch,
-    use24h, setUse24h, weekStartsMonday, setWeekStartsMonday } = useCalendar();
+  const {
+    selectedDate,
+    viewMode,
+    setViewMode,
+    goNext,
+    goPrev,
+    goToday,
+    search,
+    setSearch,
+    use24h,
+    setUse24h,
+    weekStartsMonday,
+    setWeekStartsMonday,
+  } = useCalendar();
   const isMobile = useIsMobile();
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
-  const viewDropdownRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
+  // Sync tab change events → viewMode
   useEffect(() => {
-    if (!viewDropdownOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (viewDropdownRef.current && !viewDropdownRef.current.contains(e.target as Node)) {
-        setViewDropdownOpen(false);
-      }
+    const el = tabsRef.current;
+    if (!el) return;
+    const handler = (e: Event) => {
+      const idx: number =
+        (e as CustomEvent).detail?.index ?? (el as any).activeTabIndex ?? 0;
+      const view = VIEWS[idx];
+      if (view) setViewMode(view.id);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [viewDropdownOpen]);
+    el.addEventListener("change", handler);
+    return () => el.removeEventListener("change", handler);
+  }, [setViewMode]);
 
   useEffect(() => {
     if (!settingsOpen) return;
@@ -53,7 +68,6 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
 
   const openSearch = () => {
     setSearchExpanded(true);
-    // Focus after the expand transition starts
     setTimeout(() => searchInputRef.current?.focus(), 50);
   };
 
@@ -62,431 +76,365 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
     setSearch("");
   };
 
-  return (
-    <header
-      style={{
-        height: isMobile ? 56 : 64,
-        flexShrink: 0,
-        display: "flex",
-        alignItems: "center",
-        gap: isMobile ? 2 : 4,
-        padding: isMobile ? "0 4px 0 2px" : "0 8px 0 4px",
-        backgroundColor: "hsl(var(--md-sys-color-surface))",
-        borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
-        position: "relative",
-        zIndex: 10,
-      }}
-    >
-      {/* Hamburger */}
-      <md-icon-button onClick={onToggleSidebar} aria-label="Toggle sidebar">
-        <md-icon>menu</md-icon>
-      </md-icon-button>
+  const activeTabIndex = VIEWS.findIndex((v) => v.id === viewMode);
 
-      {/* Logo: calendar icon with date + "Calendar" wordmark */}
-      <div
+  return (
+    <>
+      <header
         style={{
+          height: isMobile ? 56 : 64,
+          flexShrink: 0,
           display: "flex",
           alignItems: "center",
-          gap: 8,
-          padding: "0 4px",
-          minWidth: 0,
-          flexShrink: 0,
+          gap: isMobile ? 2 : 4,
+          padding: isMobile ? "0 4px 0 2px" : "0 8px 0 4px",
+          backgroundColor: "hsl(var(--md-sys-color-surface))",
+          position: "relative",
+          zIndex: 10,
         }}
       >
+        {/* Hamburger */}
+        <md-icon-button onClick={onToggleSidebar} aria-label="Toggle sidebar">
+          <md-icon>menu</md-icon>
+        </md-icon-button>
+
+        {/* Logo: calendar icon with date + "Calendar" wordmark */}
         <div
-          style={{
-            position: "relative",
-            width: 36,
-            height: 36,
-            borderRadius: 8,
-            border: "2px solid hsl(var(--md-sys-color-outline-variant))",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 15,
-            fontWeight: 600,
-            color: "hsl(var(--md-sys-color-on-surface))",
-            flexShrink: 0,
-          }}
-        >
-          <span
-            style={{
-              position: "absolute",
-              top: -2,
-              left: 0,
-              right: 0,
-              height: 5,
-              backgroundColor: "hsl(var(--md-sys-color-primary))",
-              borderTopLeftRadius: 6,
-              borderTopRightRadius: 6,
-            }}
-          />
-          {selectedDate.getDate()}
-        </div>
-        {!isMobile && (
-          <span
-            style={{
-              fontSize: 20,
-              fontWeight: 400,
-              color: "hsl(var(--md-sys-color-on-surface))",
-              letterSpacing: 0,
-              whiteSpace: "nowrap",
-            }}
-          >
-            Calendar
-          </span>
-        )}
-      </div>
-
-      {/* Today + Prev/Next */}
-      <div style={{ display: "flex", alignItems: "center", gap: 2, marginLeft: isMobile ? 2 : 8 }}>
-        {!isMobile && (
-          <button
-            onClick={goToday}
-            style={{
-              height: 36,
-              padding: "0 16px",
-              borderRadius: 4,
-              border: "1px solid hsl(var(--md-sys-color-outline))",
-              backgroundColor: "transparent",
-              color: "hsl(var(--md-sys-color-on-surface))",
-              fontSize: 14,
-              fontWeight: 500,
-              cursor: "pointer",
-              fontFamily: "inherit",
-            }}
-          >
-            Today
-          </button>
-        )}
-        <md-icon-button onClick={goPrev} aria-label="Previous">
-          <md-icon>chevron_left</md-icon>
-        </md-icon-button>
-        <md-icon-button onClick={goNext} aria-label="Next">
-          <md-icon>chevron_right</md-icon>
-        </md-icon-button>
-      </div>
-
-      {/* Date label */}
-      <span
-        style={{
-          fontSize: isMobile ? 14 : 22,
-          fontWeight: 400,
-          color: "hsl(var(--md-sys-color-on-surface))",
-          marginLeft: isMobile ? 2 : 8,
-          letterSpacing: 0,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          flex: isMobile ? 1 : undefined,
-          minWidth: 0,
-        }}
-      >
-        {headerLabel}
-      </span>
-
-      {!isMobile && <div style={{ flex: 1 }} />}
-
-      {/* Search — hidden on mobile */}
-      {!isMobile && (
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          {/* Expanded search field */}
-          {searchExpanded && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                height: 36,
-                backgroundColor: "hsl(var(--md-sys-color-surface-container))",
-                borderRadius: 18,
-                padding: "0 8px 0 16px",
-                gap: 4,
-                width: 240,
-              }}
-            >
-              <md-icon
-                style={{
-                  fontSize: "18px",
-                  color: "hsl(var(--md-sys-color-on-surface-variant))",
-                  flexShrink: 0,
-                }}
-              >
-                search
-              </md-icon>
-              <input
-                ref={searchInputRef}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search events"
-                onKeyDown={(e) => { if (e.key === "Escape") closeSearch(); }}
-                style={{
-                  flex: 1,
-                  border: 0,
-                  background: "transparent",
-                  fontSize: 14,
-                  color: "hsl(var(--md-sys-color-on-surface))",
-                  outline: "none",
-                  fontFamily: "inherit",
-                  minWidth: 0,
-                }}
-              />
-              {/* Clear / close */}
-              <md-icon-button
-                aria-label="Clear search"
-                onClick={closeSearch}
-                style={{ "--md-icon-button-icon-size": "18px" } as React.CSSProperties}
-              >
-                <md-icon>close</md-icon>
-              </md-icon-button>
-            </div>
-          )}
-
-          {/* Search icon button — shown when collapsed */}
-          {!searchExpanded && (
-            <md-icon-button aria-label="Search" onClick={openSearch}>
-              <md-icon>search</md-icon>
-            </md-icon-button>
-          )}
-        </div>
-      )}
-
-      {/* Settings — hidden on mobile */}
-      {!isMobile && (
-        <div ref={settingsRef} style={{ position: "relative", flexShrink: 0 }}>
-          <md-icon-button
-            aria-label="Settings"
-            onClick={() => setSettingsOpen((v) => !v)}
-          >
-            <md-icon>settings</md-icon>
-          </md-icon-button>
-
-          {settingsOpen && (
-            <div
-              style={{
-                position: "absolute",
-                top: "calc(100% + 4px)",
-                right: 0,
-                width: 240,
-                backgroundColor: "hsl(var(--md-sys-color-surface-container))",
-                borderRadius: 12,
-                boxShadow: "0 4px 16px rgba(0,0,0,0.16)",
-                zIndex: 200,
-                overflow: "hidden",
-              }}
-            >
-              {/* Header */}
-              <div
-                style={{
-                  padding: "12px 16px 8px",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "hsl(var(--md-sys-color-on-surface-variant))",
-                  letterSpacing: "0.4px",
-                  textTransform: "uppercase",
-                  borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
-                }}
-              >
-                Settings
-              </div>
-
-              {/* Time format toggle */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "12px 16px",
-                  borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
-                }}
-              >
-                <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
-                  24-hour time
-                </span>
-                <button
-                  onClick={() => setUse24h((v) => !v)}
-                  style={{
-                    width: 40,
-                    height: 24,
-                    borderRadius: 12,
-                    border: 0,
-                    backgroundColor: use24h
-                      ? "hsl(var(--md-sys-color-primary))"
-                      : "hsl(var(--md-sys-color-outline-variant))",
-                    cursor: "pointer",
-                    position: "relative",
-                    transition: "background-color 0.2s",
-                    flexShrink: 0,
-                  }}
-                >
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: 2,
-                      left: use24h ? 18 : 2,
-                      width: 20,
-                      height: 20,
-                      borderRadius: "50%",
-                      backgroundColor: "#fff",
-                      transition: "left 0.2s",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                    }}
-                  />
-                </button>
-              </div>
-
-              {/* Week starts on toggle */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "12px 16px",
-                }}
-              >
-                <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
-                  Week starts Monday
-                </span>
-                <button
-                  onClick={() => setWeekStartsMonday((v) => !v)}
-                  style={{
-                    width: 40,
-                    height: 24,
-                    borderRadius: 12,
-                    border: 0,
-                    backgroundColor: weekStartsMonday
-                      ? "hsl(var(--md-sys-color-primary))"
-                      : "hsl(var(--md-sys-color-outline-variant))",
-                    cursor: "pointer",
-                    position: "relative",
-                    transition: "background-color 0.2s",
-                    flexShrink: 0,
-                  }}
-                >
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: 2,
-                      left: weekStartsMonday ? 18 : 2,
-                      width: 20,
-                      height: 20,
-                      borderRadius: "50%",
-                      backgroundColor: "#fff",
-                      transition: "left 0.2s",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                    }}
-                  />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* View switcher — custom dropdown */}
-      <div
-        ref={viewDropdownRef}
-        style={{ position: "relative", marginLeft: isMobile ? 0 : 4, flexShrink: 0 }}
-      >
-        {/* Trigger button */}
-        <button
-          onClick={() => setViewDropdownOpen((v) => !v)}
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 4,
-            height: 36,
-            padding: isMobile ? "0 8px 0 10px" : "0 10px 0 14px",
-            borderRadius: 4,
-            border: "1px solid hsl(var(--md-sys-color-outline))",
-            backgroundColor: "transparent",
-            color: "hsl(var(--md-sys-color-on-surface))",
-            fontSize: isMobile ? 13 : 14,
-            fontWeight: 500,
-            cursor: "pointer",
-            fontFamily: "inherit",
-            whiteSpace: "nowrap",
+            gap: 8,
+            padding: "0 4px",
+            minWidth: 0,
+            flexShrink: 0,
           }}
         >
-          {VIEWS.find((v) => v.id === viewMode)?.label ?? "Week"}
-          <span style={{ fontSize: 18, lineHeight: 1, color: "hsl(var(--md-sys-color-on-surface-variant))", marginRight: -2 }}>▾</span>
-        </button>
-
-        {/* Dropdown menu */}
-        {viewDropdownOpen && (
           <div
             style={{
-              position: "absolute",
-              top: "calc(100% + 4px)",
-              right: 0,
-              minWidth: 120,
-              backgroundColor: "hsl(var(--md-sys-color-surface-container))",
+              position: "relative",
+              width: 36,
+              height: 36,
               borderRadius: 8,
-              boxShadow: "0 4px 16px rgba(0,0,0,0.16)",
-              zIndex: 200,
-              overflow: "hidden",
+              border: "2px solid hsl(var(--md-sys-color-outline-variant))",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 15,
+              fontWeight: 600,
+              color: "hsl(var(--md-sys-color-on-surface))",
+              flexShrink: 0,
             }}
           >
-            {VIEWS.map((v) => (
-              <button
-                key={v.id}
-                onClick={() => { setViewMode(v.id); setViewDropdownOpen(false); }}
+            <span
+              style={{
+                position: "absolute",
+                top: -2,
+                left: 0,
+                right: 0,
+                height: 5,
+                backgroundColor: "hsl(var(--md-sys-color-primary))",
+                borderTopLeftRadius: 6,
+                borderTopRightRadius: 6,
+              }}
+            />
+            {selectedDate.getDate()}
+          </div>
+          {!isMobile && (
+            <span
+              style={{
+                fontSize: 20,
+                fontWeight: 400,
+                color: "hsl(var(--md-sys-color-on-surface))",
+                letterSpacing: 0,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Calendar
+            </span>
+          )}
+        </div>
+
+        {/* Today + Prev/Next */}
+        <div style={{ display: "flex", alignItems: "center", gap: 2, marginLeft: isMobile ? 2 : 8 }}>
+          {!isMobile && (
+            <button
+              onClick={goToday}
+              style={{
+                height: 36,
+                padding: "0 16px",
+                borderRadius: 4,
+                border: "1px solid hsl(var(--md-sys-color-outline))",
+                backgroundColor: "transparent",
+                color: "hsl(var(--md-sys-color-on-surface))",
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              Today
+            </button>
+          )}
+          <md-icon-button onClick={goPrev} aria-label="Previous">
+            <md-icon>chevron_left</md-icon>
+          </md-icon-button>
+          <md-icon-button onClick={goNext} aria-label="Next">
+            <md-icon>chevron_right</md-icon>
+          </md-icon-button>
+        </div>
+
+        {/* Date label */}
+        <span
+          style={{
+            fontSize: isMobile ? 14 : 22,
+            fontWeight: 400,
+            color: "hsl(var(--md-sys-color-on-surface))",
+            marginLeft: isMobile ? 2 : 8,
+            letterSpacing: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            flex: isMobile ? 1 : undefined,
+            minWidth: 0,
+          }}
+        >
+          {headerLabel}
+        </span>
+
+        {!isMobile && <div style={{ flex: 1 }} />}
+
+        {/* Search — hidden on mobile */}
+        {!isMobile && (
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            {searchExpanded && (
+              <div
                 style={{
-                  display: "block",
-                  width: "100%",
-                  padding: "10px 16px",
-                  border: 0,
-                  textAlign: "left",
-                  backgroundColor:
-                    viewMode === v.id
-                      ? "hsl(var(--md-sys-color-secondary-container))"
-                      : "transparent",
-                  color:
-                    viewMode === v.id
-                      ? "hsl(var(--md-sys-color-on-secondary-container))"
-                      : "hsl(var(--md-sys-color-on-surface))",
-                  fontSize: 14,
-                  fontWeight: viewMode === v.id ? 600 : 400,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                }}
-                onMouseEnter={(e) => {
-                  if (viewMode !== v.id)
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                      "hsl(var(--md-sys-color-surface-container-high))";
-                }}
-                onMouseLeave={(e) => {
-                  if (viewMode !== v.id)
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+                  display: "flex",
+                  alignItems: "center",
+                  height: 36,
+                  backgroundColor: "hsl(var(--md-sys-color-surface-container))",
+                  borderRadius: 18,
+                  padding: "0 8px 0 16px",
+                  gap: 4,
+                  width: 240,
                 }}
               >
-                {v.label}
-              </button>
-            ))}
+                <md-icon
+                  style={{
+                    fontSize: "18px",
+                    color: "hsl(var(--md-sys-color-on-surface-variant))",
+                    flexShrink: 0,
+                  }}
+                >
+                  search
+                </md-icon>
+                <input
+                  ref={searchInputRef}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search events"
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") closeSearch();
+                  }}
+                  style={{
+                    flex: 1,
+                    border: 0,
+                    background: "transparent",
+                    fontSize: 14,
+                    color: "hsl(var(--md-sys-color-on-surface))",
+                    outline: "none",
+                    fontFamily: "inherit",
+                    minWidth: 0,
+                  }}
+                />
+                <md-icon-button
+                  aria-label="Clear search"
+                  onClick={closeSearch}
+                  style={{ "--md-icon-button-icon-size": "18px" } as React.CSSProperties}
+                >
+                  <md-icon>close</md-icon>
+                </md-icon-button>
+              </div>
+            )}
+
+            {!searchExpanded && (
+              <md-icon-button aria-label="Search" onClick={openSearch}>
+                <md-icon>search</md-icon>
+              </md-icon-button>
+            )}
           </div>
         )}
-      </div>
 
-      {/* Avatar */}
+        {/* Settings — hidden on mobile */}
+        {!isMobile && (
+          <div ref={settingsRef} style={{ position: "relative", flexShrink: 0 }}>
+            <md-icon-button
+              aria-label="Settings"
+              onClick={() => setSettingsOpen((v) => !v)}
+            >
+              <md-icon>settings</md-icon>
+            </md-icon-button>
+
+            {settingsOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 4px)",
+                  right: 0,
+                  width: 240,
+                  backgroundColor: "hsl(var(--md-sys-color-surface-container))",
+                  borderRadius: 12,
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.16)",
+                  zIndex: 200,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    padding: "12px 16px 8px",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "hsl(var(--md-sys-color-on-surface-variant))",
+                    letterSpacing: "0.4px",
+                    textTransform: "uppercase",
+                    borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
+                  }}
+                >
+                  Settings
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "12px 16px",
+                    borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
+                  }}
+                >
+                  <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
+                    24-hour time
+                  </span>
+                  <button
+                    onClick={() => setUse24h((v) => !v)}
+                    style={{
+                      width: 40,
+                      height: 24,
+                      borderRadius: 12,
+                      border: 0,
+                      backgroundColor: use24h
+                        ? "hsl(var(--md-sys-color-primary))"
+                        : "hsl(var(--md-sys-color-outline-variant))",
+                      cursor: "pointer",
+                      position: "relative",
+                      transition: "background-color 0.2s",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: 2,
+                        left: use24h ? 18 : 2,
+                        width: 20,
+                        height: 20,
+                        borderRadius: "50%",
+                        backgroundColor: "#fff",
+                        transition: "left 0.2s",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                      }}
+                    />
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "12px 16px",
+                  }}
+                >
+                  <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
+                    Week starts Monday
+                  </span>
+                  <button
+                    onClick={() => setWeekStartsMonday((v) => !v)}
+                    style={{
+                      width: 40,
+                      height: 24,
+                      borderRadius: 12,
+                      border: 0,
+                      backgroundColor: weekStartsMonday
+                        ? "hsl(var(--md-sys-color-primary))"
+                        : "hsl(var(--md-sys-color-outline-variant))",
+                      cursor: "pointer",
+                      position: "relative",
+                      transition: "background-color 0.2s",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: 2,
+                        left: weekStartsMonday ? 18 : 2,
+                        width: 20,
+                        height: 20,
+                        borderRadius: "50%",
+                        backgroundColor: "#fff",
+                        transition: "left 0.2s",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                      }}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Avatar */}
+        <div
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            backgroundColor: "hsl(var(--md-sys-color-primary))",
+            color: "hsl(var(--md-sys-color-on-primary))",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 13,
+            fontWeight: 600,
+            marginLeft: isMobile ? 2 : 4,
+            flexShrink: 0,
+            cursor: "pointer",
+          }}
+          title="Alex Chen"
+        >
+          AC
+        </div>
+      </header>
+
+      {/* Tabs view switcher — full-width row below the nav bar */}
       <div
         style={{
-          width: 32,
-          height: 32,
-          borderRadius: "50%",
-          backgroundColor: "hsl(var(--md-sys-color-primary))",
-          color: "hsl(var(--md-sys-color-on-primary))",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 13,
-          fontWeight: 600,
-          marginLeft: isMobile ? 2 : 4,
+          backgroundColor: "hsl(var(--md-sys-color-surface))",
+          borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
           flexShrink: 0,
-          cursor: "pointer",
         }}
-        title="Alex Chen"
       >
-        AC
+        <md-tabs
+          ref={tabsRef as React.RefObject<HTMLElement>}
+          activeTabIndex={activeTabIndex}
+          style={{ width: "100%" }}
+        >
+          {VIEWS.map((v) => (
+            <md-primary-tab key={v.id}>{v.label}</md-primary-tab>
+          ))}
+        </md-tabs>
       </div>
-    </header>
+    </>
   );
 }

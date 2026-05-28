@@ -302,7 +302,10 @@ declare namespace JSX {
 
     // Tabs
     "md-tabs": React.DetailedHTMLProps<
-      React.HTMLAttributes<HTMLElement>,
+      React.HTMLAttributes<HTMLElement> & {
+        activeTabIndex?: number;
+        autoActivate?: boolean;
+      },
       HTMLElement
     >;
     "md-primary-tab": React.DetailedHTMLProps<

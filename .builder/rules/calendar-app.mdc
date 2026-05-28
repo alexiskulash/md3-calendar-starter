@@ -26,7 +26,7 @@ client/
 │       └── EventDialog.tsx             # md-dialog for creating / editing events
 └── types/
     └── calendar.ts                     # CalendarEvent, ViewMode, EventColor types
-```
+
 
 ## State Management
 
@@ -82,6 +82,23 @@ Events cycle through 3 MD3 color roles:
 | Click "Create" in sidebar | `Sidebar` | Opens blank create dialog |
 | Click mini-calendar date | `MiniCalendar` | Updates `selectedDate` |
 
+## View Switcher (TopBar tabs row)
+
+`TopBar` returns a React fragment with two elements:
+
+1. `<header>` — the main nav bar (hamburger, logo, today/prev/next, date label, search, settings, avatar)
+2. A `<div>` containing `<md-tabs>` with four `<md-primary-tab>` children (Day / Week / Month / Schedule)
+
+The tabs row sits directly below the header and carries the `borderBottom` separator.
+
+**Sync pattern** — `activeTabIndex` is derived from `VIEWS.findIndex(v => v.id === viewMode)` so
+it stays in sync whenever viewMode changes from any source (mini-calendar, keyboard shortcuts, etc.).
+Tab interactions fire a native `"change"` event; a `useEffect` listener reads `event.detail.index`
+(or `el.activeTabIndex` as fallback) and calls `setViewMode(VIEWS[idx].id)`.
+
+The old custom dropdown (`viewDropdownOpen` state + click-outside effect + dropdown JSX) has been
+removed entirely.
+
 ## MD3 Components Used
 
 - `md-dialog` — EventDialog modal
@@ -90,6 +107,7 @@ Events cycle through 3 MD3 color roles:
 - `md-icon-button` / `md-icon` — nav arrows, close, hamburger
 - `md-outlined-button` — "Today" button in top bar
 - `md-divider` — sidebar section separator
+- `md-tabs` / `md-primary-tab` — view switcher row in TopBar
 
 ## No Backend
 
