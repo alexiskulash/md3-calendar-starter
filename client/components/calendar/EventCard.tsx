@@ -6,27 +6,7 @@ interface EventCardProps {
   compact?: boolean;
 }
 
-const COLOR_STYLES: Record<
-  CalendarEvent["color"],
-  { bg: string; text: string }
-> = {
-  primary: {
-    bg: "hsl(var(--md-sys-color-primary-container))",
-    text: "hsl(var(--md-sys-color-on-primary-container))",
-  },
-  secondary: {
-    bg: "hsl(var(--md-sys-color-secondary-container))",
-    text: "hsl(var(--md-sys-color-on-secondary-container))",
-  },
-  tertiary: {
-    bg: "hsl(var(--md-sys-color-tertiary-container))",
-    text: "hsl(var(--md-sys-color-on-tertiary-container))",
-  },
-};
-
 export function EventCard({ event, onClick, compact = false }: EventCardProps) {
-  const colors = COLOR_STYLES[event.color];
-
   return (
     <div
       onClick={(e) => {
@@ -34,23 +14,32 @@ export function EventCard({ event, onClick, compact = false }: EventCardProps) {
         onClick(event);
       }}
       style={{
-        backgroundColor: colors.bg,
-        color: colors.text,
-        borderRadius: "4px",
-        padding: compact ? "1px 4px" : "2px 6px",
-        fontSize: compact ? "11px" : "12px",
-        fontWeight: "500",
+        backgroundColor: "var(--neu-base)",
+        color: "var(--neu-text)",
+        borderRadius: compact ? 8 : 12,
+        padding: compact ? "2px 6px" : "4px 8px",
+        fontSize: compact ? 11 : 12,
+        fontWeight: 300,
         cursor: "pointer",
         overflow: "hidden",
         whiteSpace: "nowrap",
         textOverflow: "ellipsis",
-        lineHeight: "1.4",
+        lineHeight: 1.5,
         userSelect: "none",
+        boxShadow: "var(--neu-inset-sm)",
+        transition: "box-shadow 0.15s",
+        letterSpacing: 0.2,
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.boxShadow = "var(--neu-raised-sm)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.boxShadow = "var(--neu-inset-sm)";
       }}
       title={`${event.title} (${event.startTime}–${event.endTime})`}
     >
       {!compact && (
-        <span style={{ marginRight: "4px", opacity: 0.8 }}>
+        <span style={{ marginRight: 4, opacity: 0.7 }}>
           {event.startTime}
         </span>
       )}

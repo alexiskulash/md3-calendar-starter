@@ -11,91 +11,96 @@ export function SettingsPanel({ onClose: _onClose }: SettingsPanelProps) {
     <div
       style={{
         position: "absolute",
-        top: "calc(100% + 4px)",
+        top: "calc(100% + 10px)",
         right: 0,
-        width: 240,
-        backgroundColor: "hsl(var(--md-sys-color-surface-container))",
-        borderRadius: 12,
-        boxShadow: "0 4px 16px rgba(0,0,0,0.16)",
+        width: 256,
+        backgroundColor: "var(--neu-base)",
+        borderRadius: 20,
+        boxShadow: "var(--neu-raised)",
         zIndex: 200,
         overflow: "hidden",
+        padding: "8px 0 12px",
       }}
     >
       <div
         style={{
-          padding: "12px 16px 8px",
-          fontSize: 13,
-          fontWeight: 600,
+          padding: "10px 20px 8px",
+          fontSize: 10,
+          fontWeight: 400,
           color: "hsl(var(--md-sys-color-on-surface-variant))",
-          letterSpacing: "0.4px",
+          letterSpacing: "0.8px",
           textTransform: "uppercase",
-          borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
         }}
       >
         Settings
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "12px 16px",
-          borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
-        }}
-      >
-        <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
-          24-hour time
-        </span>
-        <Toggle checked={use24h} onChange={() => setUse24h(!use24h)} />
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "12px 16px",
-        }}
-      >
-        <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
-          Week starts Monday
-        </span>
-        <Toggle checked={weekStartsMonday} onChange={() => setWeekStartsMonday(!weekStartsMonday)} />
-      </div>
+      <SettingRow
+        label="24-hour time"
+        checked={use24h}
+        onChange={() => setUse24h(!use24h)}
+      />
+      <SettingRow
+        label="Week starts Monday"
+        checked={weekStartsMonday}
+        onChange={() => setWeekStartsMonday(!weekStartsMonday)}
+      />
     </div>
   );
 }
 
-function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
+function SettingRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: () => void }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "12px 20px",
+      }}
+    >
+      <span style={{ fontSize: 13, fontWeight: 300, color: "var(--neu-text)", letterSpacing: 0.2 }}>
+        {label}
+      </span>
+      <NeuToggle checked={checked} onChange={onChange} />
+    </div>
+  );
+}
+
+function NeuToggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
   return (
     <button
       onClick={onChange}
+      role="switch"
+      aria-checked={checked}
       style={{
-        width: 40,
+        width: 44,
         height: 24,
         borderRadius: 12,
         border: 0,
-        backgroundColor: checked
-          ? "hsl(var(--md-sys-color-primary))"
-          : "hsl(var(--md-sys-color-outline-variant))",
+        backgroundColor: "var(--neu-base)",
         cursor: "pointer",
         position: "relative",
-        transition: "background-color 0.2s",
         flexShrink: 0,
+        boxShadow: "var(--neu-inset-sm)",
+        transition: "box-shadow 0.2s",
+        padding: 0,
       }}
     >
       <span
         style={{
           position: "absolute",
-          top: 2,
-          left: checked ? 18 : 2,
-          width: 20,
-          height: 20,
+          top: 3,
+          left: checked ? 22 : 3,
+          width: 18,
+          height: 18,
           borderRadius: "50%",
-          backgroundColor: "#fff",
-          transition: "left 0.2s",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+          backgroundColor: checked
+            ? "hsl(var(--md-sys-color-primary))"
+            : "hsl(var(--md-sys-color-on-surface-variant))",
+          transition: "left 0.2s, background-color 0.2s",
+          boxShadow: "var(--neu-raised-sm)",
+          opacity: checked ? 1 : 0.5,
         }}
       />
     </button>

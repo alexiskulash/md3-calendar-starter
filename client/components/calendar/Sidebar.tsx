@@ -1,5 +1,4 @@
 import "@material/web/icon/icon.js";
-import "@material/web/divider/divider.js";
 import { MiniCalendar } from "./MiniCalendar";
 import { useCalendar } from "./CalendarContext";
 import { Calendar } from "../../types/calendar";
@@ -18,38 +17,37 @@ function CalendarRow({ cal, on, onToggle }: { cal: Calendar; on: boolean; onTogg
         display: "flex",
         alignItems: "center",
         gap: 12,
-        padding: "6px 16px",
+        padding: "7px 16px",
         cursor: "pointer",
-        borderRadius: 4,
-        transition: "background-color 0.15s",
+        borderRadius: 12,
+        margin: "0 8px",
+        transition: "box-shadow 0.15s",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.backgroundColor =
-          "hsl(var(--md-sys-color-surface-container))";
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "var(--neu-inset-sm)";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.backgroundColor = "transparent";
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
       }}
     >
-      {/* Custom colored checkbox */}
       <span
         style={{
-          width: 18,
-          height: 18,
-          borderRadius: 3,
-          border: `2px solid ${cal.color}`,
+          width: 16,
+          height: 16,
+          borderRadius: 5,
           backgroundColor: on ? cal.color : "transparent",
+          boxShadow: on ? "none" : "var(--neu-inset-sm)",
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
-          transition: "background-color 0.15s",
+          transition: "all 0.15s",
         }}
       >
         {on && (
           <md-icon
             style={{
-              fontSize: "14px",
+              fontSize: "11px",
               color: "#fff",
               fontVariationSettings: "'FILL' 1, 'wght' 700",
             }}
@@ -60,8 +58,9 @@ function CalendarRow({ cal, on, onToggle }: { cal: Calendar; on: boolean; onTogg
       </span>
       <span
         style={{
-          fontSize: 14,
-          color: "hsl(var(--md-sys-color-on-surface))",
+          fontSize: 13,
+          fontWeight: 300,
+          color: "var(--neu-text)",
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
@@ -86,15 +85,15 @@ function SidebarSection({
   toggleCal: (id: string) => void;
 }) {
   return (
-    <div>
+    <div style={{ padding: "4px 0" }}>
       <div
         style={{
-          fontSize: 11,
-          fontWeight: 500,
+          fontSize: 10,
+          fontWeight: 400,
           color: "hsl(var(--md-sys-color-on-surface-variant))",
-          letterSpacing: "0.8px",
+          letterSpacing: "1px",
           textTransform: "uppercase",
-          padding: "8px 16px 4px",
+          padding: "8px 24px 4px",
         }}
       >
         {label}
@@ -111,7 +110,7 @@ function SidebarSection({
   );
 }
 
-export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarProps) {
+export function Sidebar({ onCreateEvent, isOverlay = false, onClose: _onClose }: SidebarProps) {
   const { selectedDate, setSelectedDate, calendars, calOn, toggleCal } = useCalendar();
 
   const mine = calendars.filter((c) => c.kind === "mine");
@@ -125,8 +124,7 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        backgroundColor: "hsl(var(--md-sys-color-surface))",
-        borderRight: "1px solid hsl(var(--md-sys-color-outline-variant))",
+        backgroundColor: "var(--neu-base)",
         overflowY: "auto",
         ...(isOverlay
           ? {
@@ -135,13 +133,13 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
               top: 0,
               bottom: 0,
               zIndex: 200,
-              boxShadow: "4px 0 16px rgba(0,0,0,0.18)",
+              boxShadow: "var(--neu-raised)",
             }
           : {}),
       }}
     >
-      {/* Create button — extended FAB style */}
-      <div style={{ padding: "12px 16px 8px" }}>
+      {/* Create button — raised FAB style */}
+      <div style={{ padding: "16px 20px 8px" }}>
         <button
           onClick={onCreateEvent}
           style={{
@@ -149,32 +147,34 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
             alignItems: "center",
             gap: 12,
             padding: "0 20px 0 16px",
-            height: 56,
-            backgroundColor: "hsl(var(--md-sys-color-surface-container-low))",
-            border: "none",
-            borderRadius: 16,
+            height: 52,
+            backgroundColor: "var(--neu-base)",
+            border: 0,
+            borderRadius: 26,
             cursor: "pointer",
             width: "100%",
-            fontSize: 14,
-            fontWeight: 500,
-            color: "hsl(var(--md-sys-color-on-surface))",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)",
+            fontSize: 13,
+            fontWeight: 400,
+            color: "var(--neu-text)",
+            boxShadow: "var(--neu-raised)",
             transition: "box-shadow 0.2s",
             fontFamily: "inherit",
+            letterSpacing: 0.3,
           }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.boxShadow =
-              "0 4px 8px rgba(0,0,0,0.14), 0 2px 4px rgba(0,0,0,0.1)";
+          onMouseDown={(e) => {
+            (e.currentTarget as HTMLElement).style.boxShadow = "var(--neu-inset)";
+          }}
+          onMouseUp={(e) => {
+            (e.currentTarget as HTMLElement).style.boxShadow = "var(--neu-raised)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.boxShadow =
-              "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)";
+            (e.currentTarget as HTMLElement).style.boxShadow = "var(--neu-raised)";
           }}
         >
           <md-icon
             style={{
               color: "hsl(var(--md-sys-color-primary))",
-              fontSize: "24px",
+              fontSize: "22px",
             }}
           >
             add
@@ -186,25 +186,15 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
       {/* Mini calendar */}
       <MiniCalendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
 
-      <md-divider style={{ margin: "8px 0" }} />
+      <div style={{ height: 16 }} />
 
       {/* My Calendars */}
-      <SidebarSection
-        label="My calendars"
-        calendars={mine}
-        calOn={calOn}
-        toggleCal={toggleCal}
-      />
+      <SidebarSection label="My calendars" calendars={mine} calOn={calOn} toggleCal={toggleCal} />
 
-      <md-divider style={{ margin: "8px 0" }} />
+      <div style={{ height: 8 }} />
 
       {/* Other Calendars */}
-      <SidebarSection
-        label="Other calendars"
-        calendars={other}
-        calOn={calOn}
-        toggleCal={toggleCal}
-      />
+      <SidebarSection label="Other calendars" calendars={other} calOn={calOn} toggleCal={toggleCal} />
     </div>
   );
 }

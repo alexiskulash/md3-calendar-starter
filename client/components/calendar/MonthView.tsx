@@ -1,12 +1,6 @@
 import {
-  startOfMonth,
-  endOfMonth,
-  startOfWeek,
-  endOfWeek,
-  eachDayOfInterval,
-  format,
-  isSameMonth,
-  isToday,
+  startOfMonth, endOfMonth, startOfWeek, endOfWeek,
+  eachDayOfInterval, format, isSameMonth, isToday,
 } from "date-fns";
 import { CalendarEvent } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
@@ -47,17 +41,17 @@ export function MonthView({ currentDate, onDayClick, onEventClick, onCreateEvent
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(7, 1fr)",
-          borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
+          padding: "0 8px",
         }}
       >
         {(weekStartsMonday ? DAY_HEADERS_MON : DAY_HEADERS_SUN).map((d) => (
           <div
             key={d}
             style={{
-              padding: isMobile ? "6px 4px" : "8px 12px",
-              fontSize: isMobile ? 10 : 11,
-              fontWeight: 500,
-              letterSpacing: "0.8px",
+              padding: isMobile ? "8px 4px" : "10px 12px",
+              fontSize: isMobile ? 9 : 10,
+              fontWeight: 400,
+              letterSpacing: "1px",
               textAlign: isMobile ? "center" : undefined,
               color: "hsl(var(--md-sys-color-on-surface-variant))",
             }}
@@ -75,6 +69,8 @@ export function MonthView({ currentDate, onDayClick, onEventClick, onCreateEvent
           gridAutoRows: "1fr",
           flex: 1,
           overflow: "auto",
+          gap: 4,
+          padding: "0 8px 8px",
         }}
       >
         {days.map((day) => {
@@ -93,27 +89,28 @@ export function MonthView({ currentDate, onDayClick, onEventClick, onCreateEvent
                 onDayClick(day);
               }}
               style={{
-                borderLeft: "1px solid hsl(var(--md-sys-color-outline-variant))",
-                borderTop: "1px solid hsl(var(--md-sys-color-outline-variant))",
-                padding: isMobile ? "2px 3px" : "4px 6px",
+                borderRadius: 14,
+                padding: isMobile ? "4px 3px" : "6px 8px",
                 minHeight: isMobile ? 64 : 96,
                 cursor: "pointer",
-                backgroundColor: inMonth
-                  ? "transparent"
-                  : "hsl(var(--md-sys-color-surface-container-low))",
+                backgroundColor: "var(--neu-base)",
                 display: "flex",
                 flexDirection: "column",
                 gap: 2,
                 overflow: "hidden",
+                boxShadow: inMonth ? "var(--neu-raised-sm)" : "var(--neu-inset-sm)",
+                transition: "box-shadow 0.15s",
+                opacity: inMonth ? 1 : 0.6,
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.backgroundColor =
-                  "hsl(var(--md-sys-color-surface-container))";
+                if (inMonth) {
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = "var(--neu-inset-sm)";
+                }
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.backgroundColor = inMonth
-                  ? "transparent"
-                  : "hsl(var(--md-sys-color-surface-container-low))";
+                (e.currentTarget as HTMLDivElement).style.boxShadow = inMonth
+                  ? "var(--neu-raised-sm)"
+                  : "var(--neu-inset-sm)";
               }}
             >
               {/* Date number */}
@@ -126,17 +123,14 @@ export function MonthView({ currentDate, onDayClick, onEventClick, onCreateEvent
                     minWidth: isMobile ? 20 : 24,
                     height: isMobile ? 20 : 24,
                     padding: "0 4px",
-                    borderRadius: 12,
-                    fontSize: isMobile ? 11 : 12,
-                    fontWeight: isDayToday ? 600 : 500,
-                    backgroundColor: isDayToday
-                      ? "hsl(var(--md-sys-color-primary))"
-                      : "transparent",
+                    borderRadius: "50%",
+                    fontSize: isMobile ? 10 : 11,
+                    fontWeight: isDayToday ? 500 : 300,
+                    backgroundColor: isDayToday ? "hsl(var(--md-sys-color-primary))" : "transparent",
                     color: isDayToday
                       ? "hsl(var(--md-sys-color-on-primary))"
-                      : inMonth
-                      ? "hsl(var(--md-sys-color-on-surface))"
-                      : "hsl(var(--md-sys-color-outline))",
+                      : "var(--neu-text)",
+                    boxShadow: isDayToday ? "var(--neu-raised-sm)" : "none",
                   }}
                 >
                   {format(day, "d")}
@@ -146,7 +140,7 @@ export function MonthView({ currentDate, onDayClick, onEventClick, onCreateEvent
               {/* Events */}
               {visible.map((ev) => {
                 const cal = getCalendar(ev.cal);
-                const color = cal?.color ?? "#0B57D0";
+                const color = cal?.color ?? "#9A9A9A";
                 return (
                   <button
                     key={ev.id}
@@ -158,12 +152,12 @@ export function MonthView({ currentDate, onDayClick, onEventClick, onCreateEvent
                     style={{
                       border: 0,
                       padding: isMobile ? "1px 3px" : "2px 6px",
-                      borderRadius: 4,
+                      borderRadius: 8,
                       textAlign: "left",
-                      backgroundColor: "transparent",
-                      color: "hsl(var(--md-sys-color-on-surface))",
-                      fontSize: isMobile ? 11 : 12,
-                      fontWeight: 500,
+                      backgroundColor: "var(--neu-base)",
+                      color: "var(--neu-text)",
+                      fontSize: isMobile ? 10 : 11,
+                      fontWeight: 300,
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
@@ -173,55 +167,47 @@ export function MonthView({ currentDate, onDayClick, onEventClick, onCreateEvent
                       gap: 4,
                       fontFamily: "inherit",
                       width: "100%",
+                      boxShadow: "var(--neu-inset-sm)",
                     }}
                   >
-                    {/* Color dot */}
                     <span
                       style={{
-                        width: 8,
-                        height: 8,
+                        width: 6,
+                        height: 6,
                         borderRadius: "50%",
                         backgroundColor: color,
                         flexShrink: 0,
+                        opacity: 0.7,
                       }}
                     />
                     <span
                       style={{
                         color: "hsl(var(--md-sys-color-on-surface-variant))",
                         marginRight: 2,
-                        fontSize: 11,
+                        fontSize: 10,
                         flexShrink: 0,
                       }}
                     >
                       {ev.startTime.replace(/^0/, "")}
                     </span>
-                    <span
-                      style={{
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {ev.title}
                     </span>
                   </button>
                 );
               })}
 
-              {/* Overflow */}
               {overflow > 0 && (
                 <div
                   style={{
-                    fontSize: 11,
+                    fontSize: 10,
                     color: "hsl(var(--md-sys-color-on-surface-variant))",
-                    padding: "0 6px",
+                    padding: "0 4px",
+                    fontWeight: 300,
                   }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDayClick(day);
-                  }}
+                  onClick={(e) => { e.stopPropagation(); onDayClick(day); }}
                 >
-                  {overflow} more
+                  +{overflow} more
                 </div>
               )}
             </div>

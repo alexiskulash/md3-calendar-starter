@@ -42,19 +42,6 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const avatarAreaRef = useRef<HTMLDivElement>(null);
 
-  // Close settings panel on outside click
-  useEffect(() => {
-    if (!settingsOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (avatarAreaRef.current && !avatarAreaRef.current.contains(e.target as Node)) {
-        setSettingsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [settingsOpen]);
-
-  // Sync tab change events → viewMode
   useEffect(() => {
     const el = tabsRef.current;
     if (!el) return;
@@ -67,6 +54,17 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
     el.addEventListener("change", handler);
     return () => el.removeEventListener("change", handler);
   }, [setViewMode]);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (avatarAreaRef.current && !avatarAreaRef.current.contains(e.target as Node)) {
+        setSettingsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [settingsOpen]);
 
   const openSearch = () => {
     setSearchExpanded(true);
@@ -89,10 +87,8 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
           display: "flex",
           alignItems: "center",
           gap: isMobile ? 2 : 4,
-          padding: isMobile ? "0 4px 0 2px" : "0 8px 0 4px",
-          backgroundColor: "hsl(var(--md-sys-color-surface))",
-          position: "relative",
-          zIndex: 10,
+          padding: isMobile ? "0 8px 0 4px" : "0 12px 0 8px",
+          backgroundColor: "var(--neu-base)",
         }}
       >
         {/* Hamburger */}
@@ -100,7 +96,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
           <md-icon>menu</md-icon>
         </md-icon-button>
 
-        {/* Logo: calendar icon with date + "Calendar" wordmark */}
+        {/* Logo */}
         <div
           style={{
             display: "flex",
@@ -116,27 +112,28 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
               position: "relative",
               width: 36,
               height: 36,
-              borderRadius: 8,
-              border: "2px solid hsl(var(--md-sys-color-outline-variant))",
+              borderRadius: 10,
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 15,
-              fontWeight: 600,
-              color: "hsl(var(--md-sys-color-on-surface))",
+              fontSize: 14,
+              fontWeight: 400,
+              color: "var(--neu-text)",
               flexShrink: 0,
+              boxShadow: "var(--neu-raised-sm)",
+              backgroundColor: "var(--neu-base)",
             }}
           >
             <span
               style={{
                 position: "absolute",
-                top: -2,
+                top: 0,
                 left: 0,
                 right: 0,
-                height: 5,
+                height: 4,
                 backgroundColor: "hsl(var(--md-sys-color-primary))",
-                borderTopLeftRadius: 6,
-                borderTopRightRadius: 6,
+                borderTopLeftRadius: 10,
+                borderTopRightRadius: 10,
               }}
             />
             {selectedDate.getDate()}
@@ -144,10 +141,10 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
           {!isMobile && (
             <span
               style={{
-                fontSize: 20,
-                fontWeight: 400,
-                color: "hsl(var(--md-sys-color-on-surface))",
-                letterSpacing: 0,
+                fontSize: 18,
+                fontWeight: 300,
+                color: "var(--neu-text)",
+                letterSpacing: 0.5,
                 whiteSpace: "nowrap",
               }}
             >
@@ -157,21 +154,32 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         </div>
 
         {/* Today + Prev/Next */}
-        <div style={{ display: "flex", alignItems: "center", gap: 2, marginLeft: isMobile ? 2 : 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: isMobile ? 2 : 8 }}>
           {!isMobile && (
             <button
               onClick={goToday}
               style={{
                 height: 36,
-                padding: "0 16px",
-                borderRadius: 4,
-                border: "1px solid hsl(var(--md-sys-color-outline))",
-                backgroundColor: "transparent",
-                color: "hsl(var(--md-sys-color-on-surface))",
-                fontSize: 14,
-                fontWeight: 500,
+                padding: "0 20px",
+                borderRadius: 18,
+                border: 0,
+                backgroundColor: "var(--neu-base)",
+                color: "var(--neu-text)",
+                fontSize: 13,
+                fontWeight: 400,
                 cursor: "pointer",
                 fontFamily: "inherit",
+                boxShadow: "var(--neu-raised-sm)",
+                letterSpacing: 0.3,
+              }}
+              onMouseDown={(e) => {
+                (e.currentTarget as HTMLElement).style.boxShadow = "var(--neu-inset-sm)";
+              }}
+              onMouseUp={(e) => {
+                (e.currentTarget as HTMLElement).style.boxShadow = "var(--neu-raised-sm)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.boxShadow = "var(--neu-raised-sm)";
               }}
             >
               Today
@@ -188,11 +196,11 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         {/* Date label */}
         <span
           style={{
-            fontSize: isMobile ? 14 : 22,
-            fontWeight: 400,
-            color: "hsl(var(--md-sys-color-on-surface))",
+            fontSize: isMobile ? 13 : 20,
+            fontWeight: 300,
+            color: "var(--neu-text)",
             marginLeft: isMobile ? 2 : 8,
-            letterSpacing: 0,
+            letterSpacing: 0.3,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
@@ -205,25 +213,26 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
 
         {!isMobile && <div style={{ flex: 1 }} />}
 
-        {/* Search — hidden on mobile */}
+        {/* Search */}
         {!isMobile && (
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            {searchExpanded && (
+            {searchExpanded ? (
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
                   height: 36,
-                  backgroundColor: "hsl(var(--md-sys-color-surface-container))",
+                  backgroundColor: "var(--neu-base)",
                   borderRadius: 18,
                   padding: "0 8px 0 16px",
-                  gap: 4,
-                  width: 240,
+                  gap: 6,
+                  width: 220,
+                  boxShadow: "var(--neu-inset)",
                 }}
               >
                 <md-icon
                   style={{
-                    fontSize: "18px",
+                    fontSize: "16px",
                     color: "hsl(var(--md-sys-color-on-surface-variant))",
                     flexShrink: 0,
                   }}
@@ -235,31 +244,28 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search events"
-                  onKeyDown={(e) => {
-                    if (e.key === "Escape") closeSearch();
-                  }}
+                  onKeyDown={(e) => { if (e.key === "Escape") closeSearch(); }}
                   style={{
                     flex: 1,
                     border: 0,
                     background: "transparent",
-                    fontSize: 14,
-                    color: "hsl(var(--md-sys-color-on-surface))",
+                    fontSize: 13,
+                    color: "var(--neu-text)",
                     outline: "none",
                     fontFamily: "inherit",
+                    fontWeight: 300,
                     minWidth: 0,
                   }}
                 />
                 <md-icon-button
                   aria-label="Clear search"
                   onClick={closeSearch}
-                  style={{ "--md-icon-button-icon-size": "18px" } as React.CSSProperties}
+                  style={{ "--md-icon-button-icon-size": "16px" } as React.CSSProperties}
                 >
                   <md-icon>close</md-icon>
                 </md-icon-button>
               </div>
-            )}
-
-            {!searchExpanded && (
+            ) : (
               <md-icon-button aria-label="Search" onClick={openSearch}>
                 <md-icon>search</md-icon>
               </md-icon-button>
@@ -276,25 +282,25 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
               setSettingsOpen(false);
             }}
             style={{
-              width: 32,
-              height: 32,
+              width: 36,
+              height: 36,
               borderRadius: "50%",
-              backgroundColor: activeAccount?.color ?? "hsl(var(--md-sys-color-primary))",
-              color: "#fff",
+              backgroundColor: "var(--neu-base)",
+              color: "var(--neu-text)",
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 13,
-              fontWeight: 600,
-              marginLeft: isMobile ? 2 : 4,
+              fontSize: 12,
+              fontWeight: 400,
+              marginLeft: isMobile ? 2 : 6,
               flexShrink: 0,
               cursor: "pointer",
-              border: profileMenuOpen
-                ? "2px solid hsl(var(--md-sys-color-primary))"
-                : "2px solid transparent",
+              border: 0,
               outline: "none",
               fontFamily: "inherit",
-              transition: "border-color 0.15s",
+              letterSpacing: 0.5,
+              boxShadow: profileMenuOpen ? "var(--neu-inset-sm)" : "var(--neu-raised-sm)",
+              transition: "box-shadow 0.2s",
             }}
           >
             {activeAccount?.initials ?? "?"}
@@ -313,11 +319,10 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
         </div>
       </header>
 
-      {/* Tabs view switcher — full-width row below the nav bar */}
+      {/* Tabs view switcher */}
       <div
         style={{
-          backgroundColor: "hsl(var(--md-sys-color-surface))",
-          borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
+          backgroundColor: "var(--neu-base)",
           flexShrink: 0,
         }}
       >

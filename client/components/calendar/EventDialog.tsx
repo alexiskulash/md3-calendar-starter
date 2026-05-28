@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "@material/web/icon/icon.js";
 import "@material/web/iconbutton/icon-button.js";
 import { CalendarEvent } from "../../types/calendar";
@@ -56,7 +56,6 @@ export function EventDialog({
     }
   }, [open, event, defaultDate, defaultStartTime]);
 
-  // Close on Escape
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -76,27 +75,29 @@ export function EventDialog({
 
   if (!open) return null;
 
-  // ── Shared field style ─────────────────────────────────────────────────────
   const fieldStyle: React.CSSProperties = {
     width: "100%",
     padding: "12px 14px",
-    borderRadius: 8,
-    border: "1px solid hsl(var(--md-sys-color-outline-variant))",
-    backgroundColor: "hsl(var(--md-sys-color-surface-container-highest))",
-    color: "hsl(var(--md-sys-color-on-surface))",
-    fontSize: 16,
+    borderRadius: 14,
+    border: 0,
+    backgroundColor: "var(--neu-base)",
+    color: "var(--neu-text)",
+    fontSize: 14,
     fontFamily: "inherit",
+    fontWeight: 300,
     outline: "none",
     boxSizing: "border-box",
+    boxShadow: "var(--neu-inset)",
   };
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 12,
-    fontWeight: 500,
+    fontSize: 11,
+    fontWeight: 400,
     color: "hsl(var(--md-sys-color-on-surface-variant))",
-    marginBottom: 6,
+    marginBottom: 8,
     display: "block",
-    letterSpacing: "0.3px",
+    letterSpacing: "0.5px",
+    textTransform: "uppercase",
   };
 
   return (
@@ -107,7 +108,7 @@ export function EventDialog({
         style={{
           position: "fixed",
           inset: 0,
-          backgroundColor: "rgba(0,0,0,0.32)",
+          backgroundColor: "rgba(0,0,0,0.18)",
           zIndex: 900,
         }}
       />
@@ -117,8 +118,8 @@ export function EventDialog({
         style={{
           position: "fixed",
           zIndex: 901,
-          backgroundColor: "hsl(var(--md-sys-color-surface-container-low))",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.24)",
+          backgroundColor: "var(--neu-base)",
+          boxShadow: "var(--neu-raised)",
           display: "flex",
           flexDirection: "column",
           ...(isMobile
@@ -126,7 +127,7 @@ export function EventDialog({
                 bottom: 0,
                 left: 0,
                 right: 0,
-                borderRadius: "20px 20px 0 0",
+                borderRadius: "24px 24px 0 0",
                 maxHeight: "92vh",
                 overflowY: "auto",
               }
@@ -136,13 +137,13 @@ export function EventDialog({
                 transform: "translate(-50%, -50%)",
                 width: 420,
                 maxWidth: "calc(100vw - 32px)",
-                borderRadius: 16,
+                borderRadius: 24,
                 maxHeight: "90vh",
                 overflowY: "auto",
               }),
         }}
       >
-        {/* Drag handle (mobile only) */}
+        {/* Drag handle (mobile) */}
         {isMobile && (
           <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 4px" }}>
             <div
@@ -151,6 +152,7 @@ export function EventDialog({
                 height: 4,
                 borderRadius: 2,
                 backgroundColor: "hsl(var(--md-sys-color-outline-variant))",
+                boxShadow: "var(--neu-inset-sm)",
               }}
             />
           </div>
@@ -162,14 +164,15 @@ export function EventDialog({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: isMobile ? "8px 16px 4px" : "16px 20px 8px",
+            padding: isMobile ? "8px 16px 4px" : "20px 24px 8px",
           }}
         >
           <span
             style={{
-              fontSize: 18,
-              fontWeight: 500,
-              color: "hsl(var(--md-sys-color-on-surface))",
+              fontSize: 16,
+              fontWeight: 300,
+              color: "var(--neu-text)",
+              letterSpacing: 0.3,
             }}
           >
             {isEditing ? "Edit Event" : "New Event"}
@@ -184,57 +187,38 @@ export function EventDialog({
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: 16,
+            gap: 20,
             padding: isMobile ? "8px 16px 16px" : "8px 24px 16px",
           }}
         >
-          {/* Title */}
           <div>
-            <label style={labelStyle}>Event title *</label>
+            <label style={labelStyle}>Event title</label>
             <input
               autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleSave(); }}
               placeholder="Add title"
-              style={{ ...fieldStyle, fontSize: 16 }}
-            />
-          </div>
-
-          {/* Date */}
-          <div>
-            <label style={labelStyle}>Date</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
               style={fieldStyle}
             />
           </div>
 
-          {/* Time row */}
+          <div>
+            <label style={labelStyle}>Date</label>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={fieldStyle} />
+          </div>
+
           <div style={{ display: "flex", gap: 12 }}>
             <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Start time</label>
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                style={fieldStyle}
-              />
+              <label style={labelStyle}>Start</label>
+              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} style={fieldStyle} />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={labelStyle}>End time</label>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                style={fieldStyle}
-              />
+              <label style={labelStyle}>End</label>
+              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} style={fieldStyle} />
             </div>
           </div>
 
-          {/* Calendar picker */}
           <div>
             <label style={labelStyle}>Calendar</label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -246,27 +230,28 @@ export function EventDialog({
                     display: "flex",
                     alignItems: "center",
                     gap: 6,
-                    padding: "6px 14px 6px 10px",
+                    padding: "7px 16px 7px 12px",
                     borderRadius: 20,
-                    border:
-                      cal === c.id
-                        ? `2px solid ${c.color}`
-                        : "2px solid hsl(var(--md-sys-color-outline-variant))",
-                    backgroundColor: cal === c.id ? `${c.color}18` : "transparent",
+                    border: 0,
+                    backgroundColor: "var(--neu-base)",
                     cursor: "pointer",
-                    fontSize: 13,
-                    fontWeight: cal === c.id ? 600 : 400,
-                    color: "hsl(var(--md-sys-color-on-surface))",
+                    fontSize: 12,
+                    fontWeight: cal === c.id ? 400 : 300,
+                    color: "var(--neu-text)",
                     fontFamily: "inherit",
+                    letterSpacing: 0.2,
+                    boxShadow: cal === c.id ? "var(--neu-inset-sm)" : "var(--neu-raised-sm)",
+                    transition: "box-shadow 0.15s",
                   }}
                 >
                   <span
                     style={{
-                      width: 10,
-                      height: 10,
+                      width: 8,
+                      height: 8,
                       borderRadius: "50%",
                       backgroundColor: c.color,
                       flexShrink: 0,
+                      opacity: 0.7,
                     }}
                   />
                   {c.name}
@@ -282,26 +267,26 @@ export function EventDialog({
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: isMobile ? "8px 16px 24px" : "8px 20px 16px",
-            borderTop: "1px solid hsl(var(--md-sys-color-outline-variant))",
+            padding: isMobile ? "12px 16px 28px" : "12px 24px 20px",
             gap: 8,
           }}
         >
-          {/* Delete (edit mode only) */}
           <div>
             {isEditing && onDelete && (
               <button
                 onClick={handleDelete}
                 style={{
-                  padding: "8px 16px",
+                  padding: "9px 18px",
                   border: 0,
                   borderRadius: 20,
-                  backgroundColor: "transparent",
+                  backgroundColor: "var(--neu-base)",
                   color: "hsl(var(--md-sys-color-error))",
-                  fontSize: 14,
-                  fontWeight: 500,
+                  fontSize: 13,
+                  fontWeight: 400,
                   cursor: "pointer",
                   fontFamily: "inherit",
+                  boxShadow: "var(--neu-raised-sm)",
+                  letterSpacing: 0.2,
                 }}
               >
                 Delete
@@ -309,19 +294,21 @@ export function EventDialog({
             )}
           </div>
 
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 10 }}>
             <button
               onClick={onClose}
               style={{
-                padding: "8px 20px",
+                padding: "9px 20px",
                 border: 0,
                 borderRadius: 20,
-                backgroundColor: "transparent",
-                color: "hsl(var(--md-sys-color-primary))",
-                fontSize: 14,
-                fontWeight: 500,
+                backgroundColor: "var(--neu-base)",
+                color: "var(--neu-text)",
+                fontSize: 13,
+                fontWeight: 300,
                 cursor: "pointer",
                 fontFamily: "inherit",
+                boxShadow: "var(--neu-raised-sm)",
+                letterSpacing: 0.2,
               }}
             >
               Cancel
@@ -330,20 +317,21 @@ export function EventDialog({
               onClick={handleSave}
               disabled={!title.trim()}
               style={{
-                padding: "8px 24px",
+                padding: "9px 24px",
                 border: 0,
                 borderRadius: 20,
-                backgroundColor: title.trim()
-                  ? "hsl(var(--md-sys-color-primary))"
-                  : "hsl(var(--md-sys-color-outline-variant))",
+                backgroundColor: "var(--neu-base)",
                 color: title.trim()
-                  ? "hsl(var(--md-sys-color-on-primary))"
+                  ? "hsl(var(--md-sys-color-primary))"
                   : "hsl(var(--md-sys-color-on-surface-variant))",
-                fontSize: 14,
-                fontWeight: 500,
+                fontSize: 13,
+                fontWeight: 400,
                 cursor: title.trim() ? "pointer" : "not-allowed",
                 fontFamily: "inherit",
-                transition: "background-color 0.15s",
+                letterSpacing: 0.2,
+                boxShadow: title.trim() ? "var(--neu-raised-sm)" : "var(--neu-inset-sm)",
+                transition: "box-shadow 0.2s",
+                opacity: title.trim() ? 1 : 0.6,
               }}
             >
               Save
