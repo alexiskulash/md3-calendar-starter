@@ -26,7 +26,7 @@ client/
 │       └── EventDialog.tsx             # md-dialog for creating / editing events
 └── types/
     └── calendar.ts                     # CalendarEvent, ViewMode, EventColor types
-```
+
 
 ## State Management
 
@@ -79,8 +79,19 @@ Events cycle through 3 MD3 color roles:
 | Click "+N more" | `MonthView` | Navigates to DayView |
 | Click empty time slot | `WeekView` / `DayView` | Opens create dialog pre-filled with date+time |
 | Click event chip | Any view | Opens edit dialog |
+| Drag event chip | `WeekView` / `DayView` | Moves event to new day/time via `updateEvent` |
 | Click "Create" in sidebar | `Sidebar` | Opens blank create dialog |
 | Click mini-calendar date | `MiniCalendar` | Updates `selectedDate` |
+
+## Drag & Drop (WeekView)
+
+Implemented with Pointer Events API (no library). Pattern:
+- `onPointerDown` on event button: capture pointer, record `offsetMinutes` (click offset within event)
+- `onPointerMove` on event button (captured): compute drop target from `dayColumnsRef` + `scrollRef`, snap to 15-min intervals, update `dragVisual` state
+- `onPointerUp`: if `moved`, call `updateEvent`; if not moved, call the click fallback (open edit dialog)
+- Drop indicator: semi-transparent div rendered in target day column at computed position
+- Dragged event: 50% opacity + `grabbing` cursor while active
+- `touchAction: "none"` on event buttons to prevent scroll interference on mobile
 
 ## MD3 Components Used
 
