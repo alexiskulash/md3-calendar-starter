@@ -12,7 +12,7 @@ const CALENDARS: Calendar[] = [
   { id: "tasks",      name: "Tasks",             color: "#039BE5", kind: "mine" },
   { id: "birthdays",  name: "Birthdays",         color: "#E67C73", kind: "other" },
   { id: "holidays",   name: "Holidays in US",    color: "#616161", kind: "other" },
-  { id: "sf-giants",  name: "SF Giants",         color: "#F4511E", kind: "other" },
+  { id: "sf-giants",  name: "Seattle Mariners",   color: "#F4511E", kind: "other" },
 ];
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
