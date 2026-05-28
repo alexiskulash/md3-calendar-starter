@@ -1,0 +1,54 @@
+---
+description: Auth architecture — accounts, session state, per-account event isolation
+globs:
+alwaysApply: false
+---
+
+# Auth Architecture
+
+## Session model
+- Session is **in-memory only** — no localStorage, no cookies. Hard refresh clears session.
+- `AuthProvider` in `client/context/AuthContext.tsx` owns all auth state.
+- `App.tsx` wraps everything in `<AuthProvider>`. An `<AuthGate>` component inside conditionally renders `<SignIn>` (when `activeAccountId === null`) or the normal `<Routes>`.
+
+## Accounts
+Three pre-seeded accounts defined in `ACCOUNTS` constant in `AuthContext.tsx`:
+
+| id | name | email | color |
+|----|------|-------|-------|
+| `alex` | Alex Chen | alex.chen@gmail.com | #0B57D0 |
+| `priya` | Priya Patel | priya.patel@work.com | #33B679 |
+| `sam` | Sam Kim | sam.kim@gmail.com | #8E24AA |
+
+Account type lives in `client/types/auth.ts`:
+
+interface Account { id, name, email, initials, color }
+```
+
+## AuthContext API (`useAuth()`)
+```ts
+activeAccountId: string | null   // null = signed out
+activeAccount: Account | null
+accounts: Account[]
+events: CalendarEvent[]          // events for the active account only
+addEvent(e): void
+updateEvent(e): void
+deleteEvent(id): void
+signIn(accountId): void
+switchAccount(accountId): void
+signOut(): void
+```
+
+## Per-account event isolation
+- `accountEvents: Record<string, CalendarEvent[]>` is stored in React state in `AuthProvider`.
+- Each account gets its own seed events (see `generateAlexEvents`, `generatePriyaEvents`, `generateSamEvents` in `AuthContext.tsx`).
+- `CalendarLayout` reads `events / addEvent / updateEvent / deleteEvent` from `useAuth()` instead of managing its own state. The `CalendarContext` shape is unchanged.
+- Switching accounts instantly changes which event array is exposed via `useCalendar().events`.
+
+## UI entry points
+- **Sign-in screen**: `client/pages/SignIn.tsx` — centered card with 3 account rows; clicking calls `signIn()`.
+- **Avatar + ProfileMenu**: Avatar button in `TopBar.tsx` (top-right). Opens `ProfileMenu.tsx`:
+  - Section 1: current user (56px avatar, name, email, manage button)
+  - Section 2: other accounts — click to switch
+  - Section 3: Settings (opens TopBar settings panel) + Sign out
+  - Dismiss: click outside (pointerdown listener), avatar button is excluded from outside-click check via `anchorRef`.

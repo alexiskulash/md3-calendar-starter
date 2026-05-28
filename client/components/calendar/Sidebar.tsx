@@ -179,7 +179,7 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
           >
             add
           </md-icon>
-          Create
+          Make
         </button>
       </div>
 
