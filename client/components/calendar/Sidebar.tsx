@@ -150,7 +150,7 @@ export function Sidebar({ onCreateEvent, isOverlay = false, onClose }: SidebarPr
             gap: 12,
             padding: "0 20px 0 16px",
             height: 56,
-            backgroundColor: "hsl(var(--md-sys-color-surface-container-low))",
+            backgroundColor: "rgba(238, 242, 255, 1)",
             border: "none",
             borderRadius: 16,
             cursor: "pointer",
