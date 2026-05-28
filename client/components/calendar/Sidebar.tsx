@@ -17,54 +17,40 @@ function CalendarRow({ cal, on, onToggle }: { cal: Calendar; on: boolean; onTogg
         display: "flex",
         alignItems: "center",
         gap: 12,
-        padding: "7px 16px",
+        padding: "9px 14px",
         cursor: "pointer",
-        borderRadius: 12,
-        margin: "0 8px",
-        transition: "box-shadow 0.15s",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.boxShadow = "var(--neu-inset-sm)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+        borderRadius: 14,
+        margin: "3px 12px",
+        backgroundColor: "var(--neu-base)",
+        boxShadow: on ? "var(--neu-raised-sm)" : "var(--neu-inset-sm)",
+        opacity: on ? 1 : 0.55,
+        transition: "box-shadow 0.2s, opacity 0.2s",
       }}
     >
+      {/* Soft color dot — identity marker */}
       <span
         style={{
-          width: 16,
-          height: 16,
-          borderRadius: 5,
-          backgroundColor: on ? cal.color : "transparent",
-          boxShadow: on ? "none" : "var(--neu-inset-sm)",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
+          width: 10,
+          height: 10,
+          borderRadius: "50%",
+          backgroundColor: cal.color,
           flexShrink: 0,
-          transition: "all 0.15s",
+          opacity: 0.65,
+          boxShadow: on ? "2px 2px 4px rgba(0,0,0,0.15), -2px -2px 4px rgba(255,255,255,0.8)" : "none",
+          transition: "box-shadow 0.2s",
         }}
-      >
-        {on && (
-          <md-icon
-            style={{
-              fontSize: "11px",
-              color: "#fff",
-              fontVariationSettings: "'FILL' 1, 'wght' 700",
-            }}
-          >
-            check
-          </md-icon>
-        )}
-      </span>
+      />
       <span
         style={{
           fontSize: 13,
-          fontWeight: 300,
+          fontWeight: on ? 400 : 300,
           color: "var(--neu-text)",
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
           flex: 1,
+          letterSpacing: 0.2,
+          transition: "font-weight 0.15s",
         }}
       >
         {cal.name}
@@ -88,12 +74,12 @@ function SidebarSection({
     <div style={{ padding: "4px 0" }}>
       <div
         style={{
-          fontSize: 10,
-          fontWeight: 400,
-          color: "hsl(var(--md-sys-color-on-surface-variant))",
-          letterSpacing: "1px",
-          textTransform: "uppercase",
-          padding: "8px 24px 4px",
+          fontSize: 9,
+              fontWeight: 400,
+              color: "hsl(var(--md-sys-color-on-surface-variant))",
+              letterSpacing: "1.2px",
+              textTransform: "uppercase",
+              padding: "12px 26px 6px",
         }}
       >
         {label}
