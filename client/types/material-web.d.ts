@@ -5,6 +5,14 @@
 
 declare namespace JSX {
   interface IntrinsicElements {
+    // Badge
+    "md-badge": React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement> & {
+        value?: string;
+      },
+      HTMLElement
+    >;
+
     // Buttons
     "md-filled-button": React.DetailedHTMLProps<
       React.HTMLAttributes<HTMLElement> & {

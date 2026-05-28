@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, isToday } from "date-fns";
+import "@material/web/labs/badge/badge.js";
 import { CalendarEvent } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
@@ -276,9 +277,12 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
           <div style={{ width: TIME_COL_WIDTH, flexShrink: 0 }} />
           {dayList.map((day) => {
             const isCurrentDay = isToday(day);
+            const dayStr = format(day, "yyyy-MM-dd");
+            const eventCount = filteredEvents.filter((e) => !e.allDay && e.date === dayStr).length;
+            const badgeValue = eventCount > 9 ? "9+" : eventCount > 0 ? String(eventCount) : "";
             return (
               <div
-                key={format(day, "yyyy-MM-dd")}
+                key={dayStr}
                 style={{
                   flex: 1,
                   minWidth: isMobile && days > 1 ? MIN_DAY_WIDTH : undefined,
@@ -300,27 +304,33 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                 >
                   {format(day, isMobile && days > 1 ? "EEEEE" : "EEE")}
                 </div>
-                <div
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: DAY_CIRCLE,
-                    height: DAY_CIRCLE,
-                    borderRadius: "50%",
-                    marginTop: 2,
-                    backgroundColor: isCurrentDay
-                      ? "hsl(var(--md-sys-color-primary))"
-                      : "transparent",
-                    color: isCurrentDay
-                      ? "hsl(var(--md-sys-color-on-primary))"
-                      : "hsl(var(--md-sys-color-on-surface))",
-                    fontSize: isMobile ? 16 : 22,
-                    fontWeight: isCurrentDay ? 600 : 400,
-                  }}
-                >
-                  {format(day, "d")}
-                </div>
+                {/* Circle with event-count badge */}
+                <span style={{ position: "relative", display: "inline-flex" }}>
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: DAY_CIRCLE,
+                      height: DAY_CIRCLE,
+                      borderRadius: "50%",
+                      marginTop: 2,
+                      backgroundColor: isCurrentDay
+                        ? "hsl(var(--md-sys-color-primary))"
+                        : "transparent",
+                      color: isCurrentDay
+                        ? "hsl(var(--md-sys-color-on-primary))"
+                        : "hsl(var(--md-sys-color-on-surface))",
+                      fontSize: isMobile ? 16 : 22,
+                      fontWeight: isCurrentDay ? 600 : 400,
+                    }}
+                  >
+                    {format(day, "d")}
+                  </div>
+                  {eventCount > 0 && (
+                    <md-badge value={badgeValue} />
+                  )}
+                </span>
               </div>
             );
           })}
