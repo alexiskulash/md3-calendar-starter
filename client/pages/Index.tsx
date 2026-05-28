@@ -14,6 +14,7 @@ import { DayView } from "../components/calendar/DayView";
 import { ScheduleView } from "../components/calendar/ScheduleView";
 import { EventDialog } from "../components/calendar/EventDialog";
 import { EventPopover } from "../components/calendar/EventPopover";
+import { MobileNavBar } from "../components/calendar/MobileNavBar";
 import { CalendarEvent } from "../types/calendar";
 import { format } from "date-fns";
 
@@ -196,6 +197,11 @@ function CalendarApp() {
           {renderView()}
         </main>
       </div>
+
+      {/* Bottom navigation bar — mobile only */}
+      {isMobile && (
+        <MobileNavBar viewMode={viewMode} onViewChange={setViewMode} />
+      )}
 
       {/* Event create/edit dialog */}
       <EventDialog

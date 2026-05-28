@@ -331,6 +331,28 @@ declare namespace JSX {
       HTMLElement
     >;
 
+    // Navigation Bar (labs)
+    "md-navigation-bar": React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement> & {
+        "active-index"?: number;
+        "hide-inactive-labels"?: boolean;
+        "aria-label"?: string;
+      },
+      HTMLElement
+    >;
+    "md-navigation-tab": React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement> & {
+        label?: string;
+        active?: boolean;
+        disabled?: boolean;
+        "show-badge"?: boolean;
+        "badge-value"?: string;
+        "hide-inactive-label"?: boolean;
+        "aria-label"?: string;
+      },
+      HTMLElement
+    >;
+
     // Menu
     "md-menu": React.DetailedHTMLProps<
       React.HTMLAttributes<HTMLElement> & {

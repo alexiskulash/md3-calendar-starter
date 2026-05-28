@@ -42,7 +42,7 @@ Access state anywhere inside `<CalendarLayout>` with `useCalendar()`.
 
 ## Types (`client/types/calendar.ts`)
 
-```ts
+
 type ViewMode = "month" | "week" | "day";
 type EventColor = "primary" | "secondary" | "tertiary";
 
@@ -94,6 +94,17 @@ Implemented with native HTML5 Drag and Drop API — no external library.
 - Dragged event renders at 30% opacity while in flight
 - Column highlight: `--md-sys-color-primary / 0.05` background on hover
 - Duration is preserved; only `date`, `startTime`, `endTime` change on drop
+
+## Mobile Navigation Bar
+
+`client/components/calendar/MobileNavBar.tsx`
+
+- Renders on mobile only (`isMobile` from `useIsMobile()` in `Index.tsx`)
+- Uses `md-navigation-bar` + `md-navigation-tab` from `@material/web/labs/`
+- 4 tabs: Month, Week, Day, Schedule — mapped to `ViewMode`
+- Active tab synced imperatively via `navBarRef.current.activeIndex` to handle external view changes (e.g. TopBar dropdown)
+- Listens to `navigation-bar-activated` CustomEvent to call `setViewMode`
+- Positioned at the bottom of the root flex column in `CalendarApp`, below the scrollable body
 
 ## MD3 Components Used
 
