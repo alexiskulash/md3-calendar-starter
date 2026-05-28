@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, isToday } from "date-fns";
 import { CalendarEvent } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
@@ -16,6 +16,11 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i);
 function timeToMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m;
+}
+
+function minutesToTime(minutes: number): string {
+  const clamped = Math.max(0, Math.min(minutes, 23 * 60 + 59));
+  return `${String(Math.floor(clamped / 60)).padStart(2, "0")}:${String(clamped % 60).padStart(2, "0")}`;
 }
 
 function fmtHour(h: number, use24h: boolean): string {
@@ -76,10 +81,22 @@ function layoutDayEvents(events: CalendarEvent[]): LayoutEvent[] {
   return result;
 }
 
+// ─── Drag state ───────────────────────────────────────────────────────────────
+
+interface DragState {
+  eventId: string;
+  offsetMinutes: number; // minutes from event start to where user grabbed
+}
+
+interface DragOver {
+  dayStr: string;
+  startMinutes: number;
+}
+
 // ─── WeekView component ───────────────────────────────────────────────────────
 
 export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }: WeekViewProps) {
-  const { filteredEvents, getCalendar, use24h, weekStartsMonday } = useCalendar();
+  const { filteredEvents, events, getCalendar, updateEvent, use24h, weekStartsMonday } = useCalendar();
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -87,6 +104,69 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
   const TIME_COL_WIDTH = isMobile ? 44 : 56;
   const DAY_CIRCLE = isMobile ? 32 : 40;
 
+  // ─── Drag and drop state ───────────────────────────────────────────────────
+  const [dragging, setDragging] = useState<DragState | null>(null);
+  const [dragOver, setDragOver] = useState<DragOver | null>(null);
+
+  const handleDragStart = useCallback((e: React.DragEvent, ev: CalendarEvent) => {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const offsetPx = e.clientY - rect.top;
+    const offsetMinutes = Math.round((offsetPx / HOUR_HEIGHT) * 60);
+    setDragging({ eventId: ev.id, offsetMinutes });
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", ev.id);
+    // Delay opacity change so ghost image captures original appearance
+    setTimeout(() => {
+      setDragging((prev) => prev);
+    }, 0);
+  }, [HOUR_HEIGHT]);
+
+  const handleDragEnd = useCallback(() => {
+    setDragging(null);
+    setDragOver(null);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, dayStr: string) => {
+    e.preventDefault();
+    if (!dragging) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const relY = e.clientY - rect.top;
+    const rawMinutes = (relY / HOUR_HEIGHT) * 60 - dragging.offsetMinutes;
+    const snapped = Math.round(rawMinutes / 15) * 15;
+    const startMinutes = Math.max(0, Math.min(snapped, 23 * 60));
+    setDragOver((prev) =>
+      prev?.dayStr === dayStr && prev?.startMinutes === startMinutes
+        ? prev
+        : { dayStr, startMinutes }
+    );
+  }, [dragging, HOUR_HEIGHT]);
+
+  const handleDrop = useCallback((e: React.DragEvent, dayStr: string) => {
+    e.preventDefault();
+    if (!dragging) return;
+    const originalEvent = events.find((ev) => ev.id === dragging.eventId);
+    if (!originalEvent) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const relY = e.clientY - rect.top;
+    const rawMinutes = (relY / HOUR_HEIGHT) * 60 - dragging.offsetMinutes;
+    const snapped = Math.round(rawMinutes / 15) * 15;
+    const newStartMinutes = Math.max(0, Math.min(snapped, 23 * 60));
+    const duration = timeToMinutes(originalEvent.endTime) - timeToMinutes(originalEvent.startTime);
+    const newEndMinutes = Math.min(newStartMinutes + duration, 24 * 60 - 1);
+
+    updateEvent({
+      ...originalEvent,
+      date: dayStr,
+      startTime: minutesToTime(newStartMinutes),
+      endTime: minutesToTime(newEndMinutes),
+    });
+
+    setDragging(null);
+    setDragOver(null);
+  }, [dragging, events, updateEvent, HOUR_HEIGHT]);
+
+  // ─── Week setup ────────────────────────────────────────────────────────────
   const weekOpts = useMemo(
     () => ({ weekStartsOn: (weekStartsMonday ? 1 : 0) as 0 | 1 }),
     [weekStartsMonday]
@@ -113,11 +193,6 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
     const dayStr = format(day, "yyyy-MM-dd");
     return filteredEvents.filter((e) => !e.allDay && e.date === dayStr);
   };
-
-  const allDayEventsInRange = useMemo(
-    () => filteredEvents.filter((e) => e.allDay),
-    [filteredEvents]
-  );
 
   const MIN_DAY_WIDTH = 64;
   const minGridWidth = isMobile && days > 1
@@ -240,37 +315,83 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                 const dayEvents = getEventsForDay(day);
                 const laid = layoutDayEvents(dayEvents);
                 const isDayToday = isToday(day);
+                const isDropTarget = dragOver?.dayStr === dayStr;
+
+                // Ghost preview for this column
+                const ghostEvent = isDropTarget && dragging
+                  ? events.find((e) => e.id === dragging.eventId)
+                  : null;
 
                 return (
                   <div
                     key={dayStr}
+                    onDragOver={(e) => handleDragOver(e, dayStr)}
+                    onDrop={(e) => handleDrop(e, dayStr)}
+                    onDragLeave={(e) => {
+                      // Only clear if leaving the column entirely (not entering a child)
+                      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                        setDragOver(null);
+                      }
+                    }}
                     style={{
                       flex: 1,
                       minWidth: isMobile && days > 1 ? MIN_DAY_WIDTH : undefined,
                       position: "relative",
                       borderLeft: "1px solid hsl(var(--md-sys-color-outline-variant))",
+                      backgroundColor: isDropTarget
+                        ? "hsl(var(--md-sys-color-primary) / 0.05)"
+                        : undefined,
+                      transition: "background-color 0.1s",
                     }}
                   >
                     {/* Hour rows */}
                     {HOURS.map((h) => (
                       <div
                         key={h}
-                        onClick={() => onCreateEvent(dayStr, `${String(h).padStart(2, "0")}:00`)}
+                        onClick={() => !dragging && onCreateEvent(dayStr, `${String(h).padStart(2, "0")}:00`)}
                         style={{
                           height: HOUR_HEIGHT,
                           borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant) / 0.5)",
-                          cursor: "pointer",
+                          cursor: dragging ? "copy" : "pointer",
                           boxSizing: "border-box",
                         }}
                         onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLDivElement).style.backgroundColor =
-                            "hsl(var(--md-sys-color-surface-container) / 0.6)";
+                          if (!dragging)
+                            (e.currentTarget as HTMLDivElement).style.backgroundColor =
+                              "hsl(var(--md-sys-color-surface-container) / 0.6)";
                         }}
                         onMouseLeave={(e) => {
                           (e.currentTarget as HTMLDivElement).style.backgroundColor = "transparent";
                         }}
                       />
                     ))}
+
+                    {/* Drop ghost preview */}
+                    {ghostEvent && dragOver && (() => {
+                      const duration =
+                        timeToMinutes(ghostEvent.endTime) - timeToMinutes(ghostEvent.startTime);
+                      const top = (dragOver.startMinutes / 60) * HOUR_HEIGHT;
+                      const height = Math.max((duration / 60) * HOUR_HEIGHT - 2, 18);
+                      const cal = getCalendar(ghostEvent.cal);
+                      const color = cal?.color ?? "#0B57D0";
+                      return (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: top + 1,
+                            height,
+                            left: 2,
+                            right: 4,
+                            backgroundColor: color,
+                            opacity: 0.35,
+                            borderRadius: 6,
+                            border: `2px dashed ${color}`,
+                            pointerEvents: "none",
+                            zIndex: 10,
+                          }}
+                        />
+                      );
+                    })()}
 
                     {/* Events */}
                     {laid.map((ev) => {
@@ -283,10 +404,14 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                       const leftPct = (ev.col / ev.cols) * 100;
                       const widthPct = (1 / ev.cols) * 100;
                       const isShort = height < 30;
+                      const isDraggingThis = dragging?.eventId === ev.id;
 
                       return (
                         <button
                           key={ev.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, ev)}
+                          onDragEnd={handleDragEnd}
                           onClick={(e) => {
                             e.stopPropagation();
                             const rect = e.currentTarget.getBoundingClientRect();
@@ -304,15 +429,17 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
                             borderRadius: 6,
                             padding: isShort ? "2px 4px" : "4px 6px",
                             textAlign: "left",
-                            cursor: "pointer",
+                            cursor: isDraggingThis ? "grabbing" : "grab",
                             overflow: "hidden",
                             boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.15)",
                             display: "flex",
                             flexDirection: "column",
                             gap: 1,
                             lineHeight: 1.2,
-                            zIndex: 1,
+                            zIndex: isDraggingThis ? 0 : 1,
                             fontFamily: "inherit",
+                            opacity: isDraggingThis ? 0.3 : 1,
+                            transition: "opacity 0.1s",
                           }}
                         >
                           <div
