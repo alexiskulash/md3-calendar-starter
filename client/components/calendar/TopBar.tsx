@@ -7,6 +7,7 @@ import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { useAuth } from "../../context/AuthContext";
 import { ProfileMenu } from "../auth/ProfileMenu";
+import { useDarkMode } from "../../hooks/useDarkMode";
 
 const VIEWS: { id: ViewMode; label: string }[] = [
   { id: "day", label: "Day" },
@@ -24,6 +25,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
   const { selectedDate, viewMode, setViewMode, goNext, goPrev, goToday, search, setSearch,
     use24h, setUse24h, weekStartsMonday, setWeekStartsMonday } = useCalendar();
   const { currentUser } = useAuth();
+  const [dark, setDark] = useDarkMode();
   const isMobile = useIsMobile();
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -345,6 +347,7 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                   alignItems: "center",
                   justifyContent: "space-between",
                   padding: "12px 16px",
+                  borderBottom: "1px solid hsl(var(--md-sys-color-outline-variant))",
                 }}
               >
                 <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
@@ -371,6 +374,50 @@ export function TopBar({ onToggleSidebar, headerLabel }: TopBarProps) {
                       position: "absolute",
                       top: 2,
                       left: weekStartsMonday ? 18 : 2,
+                      width: 20,
+                      height: 20,
+                      borderRadius: "50%",
+                      backgroundColor: "#fff",
+                      transition: "left 0.2s",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                    }}
+                  />
+                </button>
+              </div>
+
+              {/* Dark mode toggle */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "12px 16px",
+                }}
+              >
+                <span style={{ fontSize: 14, color: "hsl(var(--md-sys-color-on-surface))" }}>
+                  Dark mode
+                </span>
+                <button
+                  onClick={() => setDark((v) => !v)}
+                  style={{
+                    width: 40,
+                    height: 24,
+                    borderRadius: 12,
+                    border: 0,
+                    backgroundColor: dark
+                      ? "hsl(var(--md-sys-color-primary))"
+                      : "hsl(var(--md-sys-color-outline-variant))",
+                    cursor: "pointer",
+                    position: "relative",
+                    transition: "background-color 0.2s",
+                    flexShrink: 0,
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 2,
+                      left: dark ? 18 : 2,
                       width: 20,
                       height: 20,
                       borderRadius: "50%",
