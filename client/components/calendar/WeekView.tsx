@@ -196,9 +196,9 @@ export function WeekView({ currentDate, days = 7, onEventClick, onCreateEvent }:
 
       const { durationMin: dur, offsetMin: off } = draggingRef.current;
       const gridRect = gridColsRef.current.getBoundingClientRect();
-      const scrollTop = scrollRef.current.scrollTop;
 
-      const relY = moveEvent.clientY - gridRect.top + scrollTop;
+      // getBoundingClientRect() already accounts for scroll position, so no scrollTop needed
+      const relY = moveEvent.clientY - gridRect.top;
       const rawStartMin = (relY / HOUR_HEIGHT) * 60 - off;
       const snapped = Math.round(rawStartMin / 15) * 15;
       const clampedStart = Math.max(0, Math.min(snapped, 24 * 60 - dur));
