@@ -86,8 +86,7 @@ interface CalendarLayoutProps {
 }
 
 export function CalendarLayout({ children }: CalendarLayoutProps) {
-  // "Today" is Apr 28 2026 to match the design data
-  const today = useMemo(() => new Date(2026, 3, 28, 10, 24), []);
+  const today = useMemo(() => new Date(), []);
 
   const [selectedDate, setSelectedDate] = useState<Date>(() => today);
   const [viewMode, setViewMode] = useState<ViewMode>(() =>

@@ -29,7 +29,7 @@ export function EventDialog({
   const isMobile = useIsMobile();
   const { isDark } = useTheme();
   const isEditing = !!event;
-  const today = new Date(2026, 3, 28).toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0];
 
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(today);
