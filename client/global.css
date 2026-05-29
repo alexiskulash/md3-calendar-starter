@@ -43,6 +43,7 @@
     --md-sys-color-surface-container-low: 210 33% 99%;
     --md-sys-color-surface-container: 213 30% 94%;
     --md-sys-color-surface-container-high: 213 25% 92%;
+    --md-sys-color-surface-container-highest: 213 20% 89%;
 
     /* Background */
     --md-sys-color-background: 0 0% 100%;
@@ -108,9 +109,27 @@
     --md-sys-color-surface-container-low: 220 15% 12%;
     --md-sys-color-surface-container: 220 15% 15%;
     --md-sys-color-surface-container-high: 220 15% 18%;
+    --md-sys-color-surface-container-highest: 220 15% 22%;
 
     --md-sys-color-outline: 220 5% 60%;
     --md-sys-color-outline-variant: 220 10% 30%;
+
+    /* Material Web component dark-mode overrides */
+    /* md-navigation-bar + md-navigation-tab (both use --md-navigation-bar-* prefix) */
+    --md-navigation-bar-container-color: hsl(220 15% 15%);
+    --md-navigation-bar-active-indicator-color: hsl(220 100% 30%);
+    --md-navigation-bar-active-icon-color: hsl(220 100% 90%);
+    --md-navigation-bar-inactive-icon-color: hsl(220 5% 80%);
+    --md-navigation-bar-active-label-text-color: hsl(220 5% 90%);
+    --md-navigation-bar-inactive-label-text-color: hsl(220 5% 70%);
+    --md-navigation-bar-active-hover-icon-color: hsl(220 100% 95%);
+    --md-navigation-bar-inactive-hover-icon-color: hsl(220 5% 90%);
+
+    /* md-icon-button (standard/unselected) */
+    --md-icon-button-icon-color: hsl(220 5% 90%);
+    --md-icon-button-hover-icon-color: hsl(220 5% 95%);
+    --md-icon-button-focus-icon-color: hsl(220 5% 90%);
+    --md-icon-button-pressed-icon-color: hsl(220 5% 95%);
   }
 }
 

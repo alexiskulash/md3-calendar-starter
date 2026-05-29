@@ -4,6 +4,7 @@ import "@material/web/iconbutton/icon-button.js";
 import { CalendarEvent } from "../../types/calendar";
 import { useCalendar } from "./CalendarContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { useTheme } from "../theme/ThemeContext";
 
 interface EventDialogProps {
   open: boolean;
@@ -26,6 +27,7 @@ export function EventDialog({
 }: EventDialogProps) {
   const { calendars } = useCalendar();
   const isMobile = useIsMobile();
+  const { isDark } = useTheme();
   const isEditing = !!event;
   const today = new Date(2026, 3, 28).toISOString().split("T")[0];
 
@@ -88,6 +90,7 @@ export function EventDialog({
     fontFamily: "inherit",
     outline: "none",
     boxSizing: "border-box",
+    colorScheme: isDark ? "dark" : "light",
   };
 
   const labelStyle: React.CSSProperties = {
